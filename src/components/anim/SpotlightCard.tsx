@@ -28,9 +28,12 @@ export default function SpotlightCard({
     <div
       ref={ref}
       onPointerMove={onMove}
-      className={`spotlight group relative overflow-hidden rounded-[14px] border border-white/9 bg-ink-card transition-[transform,border-color,background] duration-500 ease-luxe hover:-translate-y-[5px] hover:border-accent/40 hover:bg-ink-card-hover ${className}`}
+      className={`spotlight group relative overflow-hidden rounded-[14px] border border-white/9 bg-ink-card transition-[transform,border-color] duration-500 ease-luxe hover:-translate-y-[5px] hover:border-[#4ddd7f] ${className}`}
     >
       <span aria-hidden className="spotlight-wash" />
+      {/* Liquid fill: a circle of #4ddd7f that spreads from the cursor's entry
+          point to flood the card on hover. */}
+      <span aria-hidden className="spotlight-fill" />
       {children}
     </div>
   );

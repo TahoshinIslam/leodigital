@@ -38,5 +38,9 @@ export type HyperspeedOptions = {
   };
 };
 
-declare const Hyperspeed: (props: { effectOptions?: HyperspeedOptions }) => React.JSX.Element;
+declare const Hyperspeed: (props: {
+  effectOptions?: HyperspeedOptions;
+  /** Fired when the WebGL context is lost, so the host can remount for a rebuild. */
+  onContextLost?: () => void;
+}) => React.JSX.Element;
 export default Hyperspeed;

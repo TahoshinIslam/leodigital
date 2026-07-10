@@ -47,9 +47,14 @@ const DEFAULT_EFFECT_OPTIONS = {
   },
 };
 
-const Hyperspeed = ({ effectOptions = DEFAULT_EFFECT_OPTIONS }) => {
+const Hyperspeed = ({ effectOptions = DEFAULT_EFFECT_OPTIONS, onContextLost }) => {
   const hyperspeed = useRef(null);
   const appRef = useRef(null);
+
+  // Keep the latest callback reachable from the context-loss handler without
+  // making it an effect dependency (which would rebuild the whole scene).
+  const onContextLostRef = useRef(onContextLost);
+  onContextLostRef.current = onContextLost;
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -369,17 +374,39 @@ const Hyperspeed = ({ effectOptions = DEFAULT_EFFECT_OPTIONS }) => {
           alpha: true,
         });
         this.renderer.setSize(initW, initH, false);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
+        // Cap the pixel ratio. On a Retina/5K display devicePixelRatio is 2-3,
+        // which makes the drawing buffer 2-3x per axis; the postprocessing
+        // pipeline then allocates SEVERAL full-resolution render targets (render
+        // + bloom + SMAA) on top of that. Uncapped, that VRAM footprint is large
+        // enough for a real GPU to lose the context under pressure — the "road
+        // shows then vanishes on a high-DPI screen" bug. 1.5 stays crisp while
+        // roughly halving the memory versus 2.
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.composer = new EffectComposer(this.renderer);
         container.append(this.renderer.domElement);
 
-        // Survive a transient context loss. Browsers cap concurrent WebGL
-        // contexts and evict the oldest under pressure (e.g. on refresh, while
-        // the previous page's contexts linger). Calling preventDefault on the
-        // loss event lets the browser restore the context instead of dropping it
-        // permanently — three re-uploads its resources on the next render.
+        // Decouple display size from the drawing buffer. setSize(..., false)
+        // leaves the canvas with no CSS size, so it renders at its *buffer*
+        // dimensions — i.e. width x devicePixelRatio — which on a 2x display
+        // makes the canvas twice the container and spills it off the bottom
+        // right. Pin it to fill the container; the buffer resolution is managed
+        // separately in tick()/resize.
+        this.renderer.domElement.style.display = "block";
+        this.renderer.domElement.style.width = "100%";
+        this.renderer.domElement.style.height = "100%";
+
+        // Survive a context loss. Browsers cap concurrent WebGL contexts and
+        // evict the oldest under pressure (e.g. on refresh, while the previous
+        // page's contexts still linger). preventDefault keeps the browser from
+        // discarding the <canvas>, but three's WebGLRenderer alone does NOT put
+        // the scene back — the postprocessing EffectComposer's render targets
+        // are invalidated by the loss and never auto-recreated, so the composer
+        // renders black. The only reliable recovery is a full rebuild, which we
+        // trigger by asking React to remount this component.
         this._onContextLost = (e) => {
           e.preventDefault();
+          const notify = onContextLostRef.current;
+          if (notify) notify();
         };
         this.renderer.domElement.addEventListener("webglcontextlost", this._onContextLost, false);
 
@@ -436,6 +463,18 @@ const Hyperspeed = ({ effectOptions = DEFAULT_EFFECT_OPTIONS }) => {
         this.onWindowResize = this.onWindowResize.bind(this);
         window.addEventListener("resize", this.onWindowResize);
 
+        // The road is built as soon as the component mounts — but on a refresh
+        // that can happen before the hero's layout has settled (big headline,
+        // web fonts, clamp() sizing). If the container's height is momentarily
+        // wrong at construction, the camera locks in a wrong aspect ratio and
+        // the perspective lands off in a corner; it only self-corrects on a
+        // window `resize`, which is why dragging the window edge fixes it. A
+        // ResizeObserver runs that same correction automatically whenever the
+        // container's own size changes — including once, right after layout
+        // settles post-refresh — so the road centres itself without any drag.
+        this._resizeObserver = new ResizeObserver(() => this.onWindowResize());
+        this._resizeObserver.observe(container);
+
         if (container.offsetWidth > 0 && container.offsetHeight > 0) {
           this.hasValidSize = true;
         }
@@ -464,7 +503,10 @@ const Hyperspeed = ({ effectOptions = DEFAULT_EFFECT_OPTIONS }) => {
           new BloomEffect({
             luminanceThreshold: 0.2,
             luminanceSmoothing: 0,
-            resolutionScale: 1,
+            // Bloom is a blur, so half-resolution is visually indistinguishable
+            // but quarters this render target's memory — more headroom against
+            // context loss on high-DPI GPUs.
+            resolutionScale: 0.5,
           }),
         );
 
@@ -640,6 +682,10 @@ const Hyperspeed = ({ effectOptions = DEFAULT_EFFECT_OPTIONS }) => {
         }
 
         window.removeEventListener("resize", this.onWindowResize);
+        if (this._resizeObserver) {
+          this._resizeObserver.disconnect();
+          this._resizeObserver = null;
+        }
         if (this.container) {
           this.container.removeEventListener("mousedown", this.onMouseDown);
           this.container.removeEventListener("mouseup", this.onMouseUp);

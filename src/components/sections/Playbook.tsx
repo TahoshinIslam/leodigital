@@ -9,7 +9,7 @@ export default function Playbook() {
       id="playbook"
       className="relative isolate overflow-hidden border-t border-white/8 bg-ink py-[clamp(96px,10vw,150px)]"
     >
-      {/* Antigravity particles: fixed while the six blocks scroll over them. */}
+      {/* DotField grid: fixed while the six blocks scroll over them. */}
       <PlaybookBackdrop />
 
       {/* Holds contrast for a section that is almost entirely body copy. */}

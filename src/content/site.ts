@@ -390,11 +390,71 @@ export const testimonials = [
   },
 ];
 
+export type PricingTier = {
+  name: string;
+  price: string;
+  cadence: string;
+  tagline: string;
+  features: string[];
+  cta: string;
+  featured: boolean;
+};
+
+export const pricing: PricingTier[] = [
+  {
+    name: "Launch",
+    price: "৳25,000",
+    cadence: "/month",
+    tagline: "For local businesses getting serious about showing up online.",
+    features: [
+      "One channel, fully managed",
+      "SEO foundation & local listings",
+      "8 social posts a month",
+      "Monthly performance report",
+      "Email & chat support",
+    ],
+    cta: "Start with Launch",
+    featured: false,
+  },
+  {
+    name: "Growth",
+    price: "৳60,000",
+    cadence: "/month",
+    tagline: "A multi-channel growth engine for brands ready to compound.",
+    features: [
+      "Up to 3 channels managed",
+      "Paid media — Meta & Google",
+      "Content calendar & production",
+      "Conversion-rate optimization",
+      "Bi-weekly strategy calls",
+      "Live results dashboard",
+    ],
+    cta: "Choose Growth",
+    featured: true,
+  },
+  {
+    name: "Scale",
+    price: "Custom",
+    cadence: "",
+    tagline: "A full-funnel partnership for teams set on owning the market.",
+    features: [
+      "Everything in Growth",
+      "Dedicated growth team",
+      "In-house video studio",
+      "Advanced attribution & data",
+      "Priority same-day support",
+    ],
+    cta: "Talk to us",
+    featured: false,
+  },
+];
+
 export const navLinks = [
   { href: "#services", label: "Services" },
   { href: "#industries", label: "Industries" },
   { href: "#playbook", label: "Playbook" },
   { href: "#studio", label: "Studio" },
+  { href: "#pricing", label: "Pricing" },
   { href: "#contact", label: "Contact" },
 ];
 

@@ -1,27 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useCanvasReady } from "@/components/anim/useCanvasReady";
 import Hyperspeed, { type HyperspeedOptions } from "@/components/Hyperspeed";
-
-const QUERY = "(min-width: 768px)";
-
-/** True only once mounted on a viewport wide enough for the road. Hiding the
- *  canvas with CSS would still mount it and hold a live WebGL context on the
- *  phones we are trying to spare, so gate the mount itself. */
-function useIsWideViewport() {
-  const subscribe = useCallback((onChange: () => void) => {
-    const mql = window.matchMedia(QUERY);
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, []);
-
-  return useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia(QUERY).matches,
-    () => false, // server: assume narrow, so nothing renders during SSR
-  );
-}
 
 /**
  * Module-level constant, not an inline literal: a fresh object identity on each
@@ -68,11 +49,21 @@ const LEOTECH_HYPERSPEED: HyperspeedOptions = {
 };
 
 export default function HeroBackdrop() {
-  const isWide = useIsWideViewport();
   const ref = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(true);
-  const mounted = isWide && near;
+  // Bumped whenever the road's WebGL context is lost. Changing the key forces a
+  // fresh Hyperspeed mount: the dead renderer/composer is disposed and a brand
+  // new context + scene is built. This is what makes the road come back after a
+  // context loss on refresh, instead of showing once and then vanishing.
+  const [generation, setGeneration] = useState(0);
+  // Render on all viewports (including tablet/phone) whenever the hero is near.
+  // Suppressed only under prefers-reduced-motion, inside Hyperspeed itself.
+  const mounted = near;
   const ready = useCanvasReady(ref, mounted);
+
+  const handleContextLost = useCallback(() => {
+    setGeneration((g) => g + 1);
+  }, []);
 
   // Unmount the road once the hero is well off-screen; otherwise it renders for
   // the whole page, on every section, for nobody.
@@ -87,8 +78,10 @@ export default function HeroBackdrop() {
   }, []);
 
   return (
-    <div ref={ref} className="relative h-full w-full">
-      {mounted && <Hyperspeed effectOptions={LEOTECH_HYPERSPEED} />}
+    <div ref={ref} className="relative h-full w-full overflow-hidden">
+      {mounted && (
+        <Hyperspeed key={generation} effectOptions={LEOTECH_HYPERSPEED} onContextLost={handleContextLost} />
+      )}
       {mounted && (
         <div
           className={`backdrop-skeleton pointer-events-none absolute inset-0 transition-opacity duration-700 ease-luxe ${

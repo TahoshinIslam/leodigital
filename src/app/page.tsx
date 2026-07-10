@@ -8,6 +8,7 @@ import Cta from "@/components/sections/Cta";
 import Hero from "@/components/sections/Hero";
 import Industries from "@/components/sections/Industries";
 import Playbook from "@/components/sections/Playbook";
+import Pricing from "@/components/sections/Pricing";
 import Services from "@/components/sections/Services";
 import Studio from "@/components/sections/Studio";
 import Testimonials from "@/components/sections/Testimonials";
@@ -41,6 +42,7 @@ export default function Home() {
         <BrandWeb />
         <Studio />
         <Testimonials />
+        <Pricing />
         <Cta />
         <Contact />
       </main>

@@ -143,7 +143,7 @@ body {
   transition: opacity 500ms var(--ease-luxe);
   background: radial-gradient(
     260px circle at var(--mx, 50%) var(--my, 50%),
-    rgba(73, 220, 122, 0.12),
+    rgba(77, 221, 127, 0.14),
     rgba(34, 242, 239, 0.05) 40%,
     transparent 70%
   );
@@ -151,6 +151,29 @@ body {
 
 .spotlight:hover .spotlight-wash {
   opacity: 1;
+}
+
+/* Liquid fill: a solid #4ddd7f disc clipped to a zero-radius circle at the
+   cursor, expanded to flood the whole card on hover. Sits below the card
+   content (which flips to dark ink via group-hover), above the base. */
+.spotlight-fill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: #4ddd7f;
+  clip-path: circle(0% at var(--mx, 50%) var(--my, 50%));
+  transition: clip-path 620ms var(--ease-luxe);
+}
+
+.spotlight:hover .spotlight-fill {
+  clip-path: circle(140% at var(--mx, 50%) var(--my, 50%));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotlight-fill {
+    transition: none;
+  }
 }
 
 /* Border glow: a second radial, masked to the 1px frame. */
@@ -166,7 +189,7 @@ body {
   transition: opacity 500ms var(--ease-luxe);
   background: radial-gradient(
     200px circle at var(--mx, 50%) var(--my, 50%),
-    rgba(73, 220, 122, 0.65),
+    #4ddd7f,
     transparent 65%
   );
   -webkit-mask:

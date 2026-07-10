@@ -94,14 +94,20 @@ export function TileCard({ tile }: { tile: Tile }) {
   return (
     <SpotlightCard className="flex h-full flex-col gap-3 px-[26px] py-7">
       <div className="flex items-center justify-between">
-        <span className="font-mono text-xs tracking-[0.12em] text-accent">{tile.num}</span>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="text-white/25 transition-all duration-500 ease-luxe group-hover:rotate-45 group-hover:text-accent" aria-hidden>
+        <span className="font-mono text-xs tracking-[0.12em] text-accent transition-colors duration-500 ease-luxe group-hover:text-ink">
+          {tile.num}
+        </span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="text-white/25 transition-all duration-500 ease-luxe group-hover:rotate-45 group-hover:text-ink" aria-hidden>
           <path d="M7 17 17 7" />
           <path d="M7 7h10v10" />
         </svg>
       </div>
-      <div className="mt-1 text-[19px] font-semibold tracking-[-0.015em] text-white">{tile.title}</div>
-      <p className="m-0 font-body text-[14.5px] leading-relaxed text-white/55">{tile.copy}</p>
+      <div className="mt-1 text-[19px] font-semibold tracking-[-0.015em] text-white transition-colors duration-500 ease-luxe group-hover:text-ink">
+        {tile.title}
+      </div>
+      <p className="m-0 font-body text-[14.5px] leading-relaxed text-white/55 transition-colors duration-500 ease-luxe group-hover:text-ink/75">
+        {tile.copy}
+      </p>
     </SpotlightCard>
   );
 }

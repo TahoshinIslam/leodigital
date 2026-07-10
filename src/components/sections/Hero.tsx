@@ -9,41 +9,20 @@ import { stats } from "@/content/site";
 export default function Hero() {
   return (
     <section className="relative -mt-[74px] overflow-hidden bg-ink pt-[74px]">
-      {/* Hyperspeed road, filling the whole hero (not a fixed height — the
-          section grows with the stats strip and with wrapped mobile copy).
-          Nudged right so its vanishing point lands in the empty half of the
-          layout rather than behind the headline. Phones skip it entirely: at
-          that width the trails cross the copy no matter how it is framed, and
-          it spares the GPU. */}
-      {/* Dimmed at the tighter widths, where the headline spans the full column
-          and the road has nowhere to sit but behind it. */}
-      <div
-        aria-hidden
-        className="absolute inset-0 z-0 hidden overflow-hidden opacity-55 md:block lg:opacity-75 xl:opacity-100"
-      >
-        <div className="absolute inset-0 md:translate-x-[8%] lg:translate-x-[11%]">
-          <HeroBackdrop />
-        </div>
+      {/* Hyperspeed road backdrop. Fills the hero; the component gates itself to
+          lg+ and caps the pixel ratio, so tablet/phone stay a clean dark hero. */}
+      <div aria-hidden className="absolute inset-0 z-0 overflow-hidden">
+        <HeroBackdrop />
       </div>
 
-      {/* Phone fallback: the original radial wash. */}
+      {/* Single legibility scrim: darkens behind the headline and settles the
+          road into the page before the stats strip. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[660px] md:hidden"
+        className="pointer-events-none absolute inset-0 z-[1]"
         style={{
           background:
-            "radial-gradient(70% 66% at 24% 86%, rgba(26,224,222,0.70), transparent 60%), radial-gradient(82% 64% at 78% 92%, rgba(58,222,135,0.58), transparent 58%), linear-gradient(0deg, rgba(46,210,150,0.46) 0%, rgba(46,210,150,0.50) 32%, rgba(46,210,150,0.16) 56%, transparent 74%)",
-        }}
-      />
-
-      {/* Scrim: darkens the left text column, then settles the road into the
-          page background before the stats strip begins. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-[1] hidden md:block"
-        style={{
-          background:
-            "linear-gradient(90deg, rgba(4,10,10,0.92) 0%, rgba(4,10,10,0.78) 26%, rgba(4,10,10,0.30) 50%, rgba(4,10,10,0.04) 72%, transparent 86%), linear-gradient(180deg, rgba(4,10,10,0.5) 0%, transparent 14%, transparent 58%, rgba(4,10,10,0.80) 86%, #040A0A 99%)",
+            "radial-gradient(115% 65% at 32% 40%, rgba(4,10,10,0.72), transparent 60%), linear-gradient(180deg, rgba(4,10,10,0.5) 0%, transparent 30%, transparent 68%, #040A0A 100%)",
         }}
       />
       <div

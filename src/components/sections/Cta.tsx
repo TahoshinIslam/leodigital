@@ -7,7 +7,7 @@ export default function Cta() {
       <Container className="flex flex-col gap-[72px]">
         <div className="grid gap-16 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
           <div className="flex flex-col gap-[22px]">
-            <Eyebrow index="08">Partnership</Eyebrow>
+            <Eyebrow index="09">Partnership</Eyebrow>
             <SplitReveal
               as="h2"
               className="m-0 text-[clamp(34px,3.8vw,52px)] leading-[1.05] font-semibold tracking-[-0.03em] text-white"
