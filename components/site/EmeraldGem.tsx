@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { useSceneVisibility, watchVisibility, type VisibilityBox } from "@/lib/visibility";
 
 type Orbit = { r: number; s: number; size: number; y: number; phase: number };
 
@@ -29,6 +30,7 @@ function GemFallback({ ref }: { ref: React.Ref<HTMLDivElement> }) {
 }
 
 export default function EmeraldGem() {
+  const sceneVisible = useSceneVisibility();
   const ref = useRef<HTMLCanvasElement>(null);
   const fallbackRef = useRef<HTMLDivElement>(null);
 
@@ -118,8 +120,23 @@ export default function EmeraldGem() {
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const clock = new THREE.Clock();
+    // Inside a FixedBackdrop the canvas is position:fixed and would report itself
+    // on screen at every scroll position, so prefer the section's signal there.
+    // In normal flow (the Industries gem) the canvas is an honest witness.
+    let own: ReturnType<typeof watchVisibility> | null = null;
+    let visible: VisibilityBox;
+    if (sceneVisible) {
+      visible = sceneVisible;
+    } else {
+      own = watchVisibility(canvas);
+      visible = own.visible;
+    }
 
     const frame = () => {
+      raf = requestAnimationFrame(frame);
+      // Off screen: keep the scene alive but do no GPU work.
+      if (!visible.current) return;
+
       const t = clock.getElapsedTime();
       if (!reduce) {
         gem.rotation.x = t * 0.14 + my * 0.12;
@@ -136,7 +153,6 @@ export default function EmeraldGem() {
       camera.position.x += (mx * 0.4 - camera.position.x) * 0.04;
       camera.lookAt(0, 0, 0);
       renderer.render(scene, camera);
-      raf = requestAnimationFrame(frame);
     };
     frame();
 
@@ -151,6 +167,7 @@ export default function EmeraldGem() {
 
     return () => {
       cancelAnimationFrame(raf);
+      own?.stop();
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("resize", onResize);
       gemGeo.dispose();
@@ -158,8 +175,13 @@ export default function EmeraldGem() {
       gemMat.dispose();
       shardMat.dispose();
       renderer.dispose();
+      // dispose() frees Three's own GPU objects but keeps the WebGL context
+      // itself alive; without this the context leaks on every unmount and the
+      // page walks into the browser's concurrent-context cap, at which point it
+      // evicts the oldest context (the hero road) and forces a rebuild.
+      renderer.forceContextLoss();
     };
-  }, []);
+  }, [sceneVisible]);
 
   return (
     <div className="h-full w-full">

@@ -4,9 +4,11 @@
 //  - guards WebGL context-creation failure instead of throwing to the boundary
 //  - honours prefers-reduced-motion (renders one static frame, no rAF loop)
 //  - guards the cleanup removeChild against an already-detached canvas
+//  - caps the pixel ratio, and pauses rendering while off screen
 
 import { Mesh, Program, Renderer, Triangle, Vec3 } from "ogl";
 import { useEffect, useRef } from "react";
+import { useSceneVisibility, watchVisibility } from "@/lib/visibility";
 
 export default function Orb({
   hue = 0,
@@ -16,6 +18,7 @@ export default function Orb({
   backgroundColor = "#000000",
 }) {
   const ctnDom = useRef(null);
+  const sceneVisible = useSceneVisibility();
 
   const vert = /* glsl */ `
     precision highp float;
@@ -230,7 +233,10 @@ export default function Orb({
 
     function resize() {
       if (!container) return;
-      const dpr = window.devicePixelRatio || 1;
+      // Cap the pixel ratio. This is a full-screen raymarched shader, so cost
+      // scales with the pixel count: at the Retina dpr of 2 it does 4x the
+      // fragment work for a soft, blurred orb that shows no benefit from it.
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const width = container.clientWidth;
       const height = container.clientHeight;
       renderer.setSize(width * dpr, height * dpr);
@@ -272,6 +278,10 @@ export default function Orb({
     };
 
     let rafId;
+    // Inside a FixedBackdrop the canvas is position:fixed and always intersects
+    // the viewport, so the section's own signal is the one to trust.
+    const own = sceneVisible ? null : watchVisibility(container);
+    const visible = sceneVisible ?? own.visible;
 
     if (reduce) {
       // One static frame: the orb is present but never animates.
@@ -283,6 +293,11 @@ export default function Orb({
 
       const update = (t) => {
         rafId = requestAnimationFrame(update);
+        // Off screen: stay mounted but skip the full-screen shader entirely.
+        if (!visible.current) {
+          lastTime = t;
+          return;
+        }
         const dt = (t - lastTime) * 0.001;
         lastTime = t;
         program.uniforms.iTime.value = t * 0.001;
@@ -305,6 +320,7 @@ export default function Orb({
 
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
+      own?.stop();
       window.removeEventListener("resize", resize);
       container.removeEventListener("mousemove", handleMouseMove);
       container.removeEventListener("mouseleave", handleMouseLeave);
@@ -312,7 +328,7 @@ export default function Orb({
       gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hue, hoverIntensity, rotateOnHover, forceHoverState, backgroundColor]);
+  }, [hue, hoverIntensity, rotateOnHover, forceHoverState, backgroundColor, sceneVisible]);
 
   return <div ref={ctnDom} className="h-full w-full" />;
 }

@@ -21,31 +21,36 @@ function useIsWide() {
 }
 
 /**
- * Gated mount for the decorative Industries gem. Previously EmeraldGem was
- * rendered unconditionally (only CSS-hidden), so it held a live WebGL context
- * for the entire page — one of up to four concurrent contexts. Browsers cap
- * concurrent contexts and evict the oldest (the hero road) when the cap is hit,
- * which is what made the hero background vanish. Mount only while the section is
- * near the viewport and only at lg+.
+ * Gated mount for the decorative Industries gem: built the first time the
+ * section is approached, and only at lg+ where it is actually shown.
+ *
+ * The mount is one-way. Unmounting on scroll was previously used to stay under
+ * the browser's concurrent-context cap — but EmeraldGem's teardown never
+ * released its context (Three's `dispose()` does not), so the unmount freed
+ * nothing and merely rebuilt the scene on every crossing. The context release is
+ * fixed at the source now, and the gem pauses itself off-screen, so it is kept
+ * once built.
  */
 export default function IndustriesGem() {
   const ref = useRef<HTMLDivElement>(null);
-  const [near, setNear] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const isWide = useIsWide();
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const io = new IntersectionObserver(([entry]) => setNear(entry.isIntersecting), {
-      rootMargin: "30% 0px",
-    });
+    const io = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setMounted(true);
+      io.disconnect();
+    }, { rootMargin: "30% 0px" });
     io.observe(el);
     return () => io.disconnect();
   }, []);
 
   return (
     <div ref={ref} className="h-full w-full">
-      {isWide && near && <EmeraldGem />}
+      {isWide && mounted && <EmeraldGem />}
     </div>
   );
 }

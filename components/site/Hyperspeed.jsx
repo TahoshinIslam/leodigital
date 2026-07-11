@@ -4,10 +4,12 @@
 //  - guards WebGL context-creation failure instead of throwing to the boundary
 //  - honours prefers-reduced-motion
 //  - colours retuned to the Leotech green/cyan accent
+//  - pauses rendering while off screen
 
 import { BloomEffect, EffectComposer, EffectPass, RenderPass, SMAAEffect, SMAAPreset } from "postprocessing";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { useSceneVisibility, watchVisibility } from "@/lib/visibility";
 
 const DEFAULT_EFFECT_OPTIONS = {
   onSpeedUp: () => {},
@@ -48,6 +50,7 @@ const DEFAULT_EFFECT_OPTIONS = {
 };
 
 const Hyperspeed = ({ effectOptions = DEFAULT_EFFECT_OPTIONS, onContextLost }) => {
+  const sceneVisible = useSceneVisibility();
   const hyperspeed = useRef(null);
   const appRef = useRef(null);
 
@@ -428,6 +431,15 @@ const Hyperspeed = ({ effectOptions = DEFAULT_EFFECT_OPTIONS, onContextLost }) =
         this.assets = {};
         this.disposed = false;
 
+        // Prefer the enclosing backdrop's signal; the canvas itself is fixed and
+        // would report "on screen" at every scroll position.
+        this.visible = options.sceneVisible ?? null;
+        if (!this.visible) {
+          const watcher = watchVisibility(container);
+          this.visible = watcher.visible;
+          this._stopWatching = watcher.stop;
+        }
+
         this.road = new Road(this, options);
         this.leftCarLights = new CarLights(
           this,
@@ -646,6 +658,7 @@ const Hyperspeed = ({ effectOptions = DEFAULT_EFFECT_OPTIONS, onContextLost }) =
 
       dispose() {
         this.disposed = true;
+        if (this._stopWatching) this._stopWatching();
 
         if (this.scene) {
           this.scene.traverse((object) => {
@@ -709,6 +722,15 @@ const Hyperspeed = ({ effectOptions = DEFAULT_EFFECT_OPTIONS, onContextLost }) =
 
       tick() {
         if (this.disposed) return;
+
+        // Off screen: stay mounted but do no GPU work. The clock is still drained
+        // so the road does not lurch forward by the whole absent interval when it
+        // comes back into view.
+        if (this.visible && !this.visible.current) {
+          this.clock.getDelta();
+          requestAnimationFrame(this.tick);
+          return;
+        }
 
         if (!this.hasValidSize) {
           const w = this.container.offsetWidth;
@@ -1231,6 +1253,7 @@ const Hyperspeed = ({ effectOptions = DEFAULT_EFFECT_OPTIONS, onContextLost }) =
       ...DEFAULT_EFFECT_OPTIONS,
       ...effectOptions,
       colors: { ...DEFAULT_EFFECT_OPTIONS.colors, ...effectOptions.colors },
+      sceneVisible,
     };
     options.distortion = distortions[options.distortion];
 
@@ -1252,7 +1275,7 @@ const Hyperspeed = ({ effectOptions = DEFAULT_EFFECT_OPTIONS, onContextLost }) =
         appRef.current = null;
       }
     };
-  }, [effectOptions]);
+  }, [effectOptions, sceneVisible]);
 
   return <div className="h-full w-full" ref={hyperspeed} />;
 };

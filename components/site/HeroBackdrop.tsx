@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useCanvasReady } from "@/components/site/anim/useCanvasReady";
 import Hyperspeed, { type HyperspeedOptions } from "@/components/site/Hyperspeed";
 
@@ -50,45 +50,35 @@ const LEOTECH_HYPERSPEED: HyperspeedOptions = {
 
 export default function HeroBackdrop() {
   const ref = useRef<HTMLDivElement>(null);
-  const [near, setNear] = useState(true);
   // Bumped whenever the road's WebGL context is lost. Changing the key forces a
   // fresh Hyperspeed mount: the dead renderer/composer is disposed and a brand
   // new context + scene is built. This is what makes the road come back after a
   // context loss on refresh, instead of showing once and then vanishing.
   const [generation, setGeneration] = useState(0);
-  // Render on all viewports (including tablet/phone) whenever the hero is near.
-  // Suppressed only under prefers-reduced-motion, inside Hyperspeed itself.
-  const mounted = near;
-  const ready = useCanvasReady(ref, mounted);
+  const ready = useCanvasReady(ref, true);
 
   const handleContextLost = useCallback(() => {
     setGeneration((g) => g + 1);
   }, []);
 
-  // Unmount the road once the hero is well off-screen; otherwise it renders for
-  // the whole page, on every section, for nobody.
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(([entry]) => setNear(entry.isIntersecting), {
-      rootMargin: "25% 0px",
-    });
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
+  // The road is built once, at the top of the page, and kept.
+  //
+  // It used to unmount whenever the hero scrolled out of a 25% band, on the
+  // theory that a scene nobody can see should not exist. But unmounting is not
+  // free: coming back rebuilt the entire scene — new WebGL context, ~22 shader
+  // compiles, fresh geometry — right in the middle of a scroll, which is what
+  // made scrolling back to the top hitch. Hyperspeed now pauses its own render
+  // loop while off-screen, so an idle road costs nothing and there is nothing to
+  // reclaim by tearing it down.
 
   return (
     <div ref={ref} className="relative h-full w-full overflow-hidden">
-      {mounted && (
-        <Hyperspeed key={generation} effectOptions={LEOTECH_HYPERSPEED} onContextLost={handleContextLost} />
-      )}
-      {mounted && (
-        <div
-          className={`backdrop-skeleton pointer-events-none absolute inset-0 transition-opacity duration-700 ease-luxe ${
-            ready ? "opacity-0" : "opacity-100"
-          }`}
-        />
-      )}
+      <Hyperspeed key={generation} effectOptions={LEOTECH_HYPERSPEED} onContextLost={handleContextLost} />
+      <div
+        className={`backdrop-skeleton pointer-events-none absolute inset-0 transition-opacity duration-700 ease-luxe ${
+          ready ? "opacity-0" : "opacity-100"
+        }`}
+      />
     </div>
   );
 }

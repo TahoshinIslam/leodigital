@@ -8,6 +8,7 @@
 //  - default colours retuned to the Leotech green/cyan accent
 
 import { useEffect, useId, useRef, memo } from "react";
+import { useSceneVisibility, watchVisibility } from "@/lib/visibility";
 
 const TWO_PI = Math.PI * 2;
 
@@ -26,6 +27,7 @@ const DotField = memo(function DotField({
   glowColor = "rgba(73, 220, 122, 0.30)",
   ...rest
 }) {
+  const sceneVisible = useSceneVisibility();
   const canvasRef = useRef(null);
   const svgRef = useRef(null);
   const glowRef = useRef(null);
@@ -58,6 +60,8 @@ const DotField = memo(function DotField({
     if (!canvas) return;
     const ctx = canvas.getContext("2d", { alpha: true });
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const own = sceneVisible ? null : watchVisibility(canvas);
+    const visible = sceneVisible ?? own.visible;
     let resizeTimer;
 
     function resize() {
@@ -163,6 +167,11 @@ const DotField = memo(function DotField({
     let frameCount = 0;
 
     function tick() {
+      // Off screen: stay mounted but skip redrawing the whole dot grid.
+      if (!visible.current) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
       frameCount++;
       const dots = dotsRef.current;
       const m = mouseRef.current;
@@ -271,12 +280,14 @@ const DotField = memo(function DotField({
 
     return () => {
       cancelAnimationFrame(rafRef.current);
+      own?.stop();
       clearInterval(speedInterval);
       clearTimeout(resizeTimer);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMouseMove);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sceneVisible]);
 
   useEffect(() => {
     rebuildRef.current?.();

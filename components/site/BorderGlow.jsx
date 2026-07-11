@@ -59,6 +59,14 @@ function animateValue({ start = 0, end = 100, duration = 1000, delay = 0, ease =
   setTimeout(() => requestAnimationFrame(tick), delay);
 }
 
+/**
+ * Hands each auto-shining card a different phase, so their (throttled) mask
+ * repaints land on different frames instead of all eight re-rasterizing on the
+ * same one. Same total work, spread evenly — which is the difference between a
+ * steady 60fps and one blown frame in every three.
+ */
+let shineInstances = 0;
+
 const GRADIENT_POSITIONS = ["80% 55%", "69% 34%", "8% 6%", "41% 38%", "86% 85%", "82% 18%", "51% 4%"];
 const COLOR_MAP = [0, 1, 2, 0, 1, 2, 1];
 
@@ -187,6 +195,7 @@ const BorderGlow = ({
     if (!autoShine) return;
     const border = borderRef.current;
     const glow = glowRef.current;
+    const card = cardRef.current;
 
     const borderMaskAt = (a) =>
       `conic-gradient(from ${a.toFixed(2)}deg at center, black ${coneSpread}%, transparent ${
@@ -209,19 +218,49 @@ const BorderGlow = ({
       return;
     }
 
+    // Writing a new conic-gradient into mask-image forces the browser to
+    // re-rasterize that layer's mask. It is by far the most expensive thing this
+    // component does: eight cards x two masked layers = sixteen mask rasters, and
+    // doing that every frame measured at 23fps on the Services section (vs 60 with
+    // the loop frozen and every layer still painted).
+    //
+    // Two bounds, therefore:
+    //  - Only repaint while the card is actually on screen.
+    //  - Only repaint at SHINE_FPS. The shine rotates at 55deg/sec, so 20 steps a
+    //    second leaves them under 3deg apart — invisible on a soft-edged cone.
+    //  - Stagger the cards, so those repaints do not all land on one frame.
+    const SHINE_FPS = 20;
+    const MIN_STEP = 1000 / SHINE_FPS;
+    const phase = (shineInstances++ % 6) * (MIN_STEP / 6);
+
+    const io = new IntersectionObserver(([e]) => (onScreen = e.isIntersecting), {
+      rootMargin: "10% 0px",
+    });
+    let onScreen = true;
+    if (card) io.observe(card);
+
     let raf = 0;
     let angle = 45;
     let last = performance.now();
+    let painted = performance.now() + phase;
     const loop = (t) => {
+      raf = requestAnimationFrame(loop);
       const dt = (t - last) / 1000;
       last = t;
+      if (!onScreen) return;
+
       angle = (angle + dt * 55 * shineSpeed) % 360;
+      if (t - painted < MIN_STEP) return;
+      painted = t;
+
       set(border, borderMaskAt(angle));
       set(glow, glowMaskAt(angle));
-      raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+    };
   }, [autoShine, coneSpread, shineSpeed]);
 
   const colorSensitivity = edgeSensitivity + 20;
