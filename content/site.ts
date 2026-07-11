@@ -390,21 +390,30 @@ export const testimonials = [
   },
 ];
 
+export type BillingPeriod = "monthly" | "annual";
+
+/** `note` carries the yearly total, so an annual price can still be shown as a
+ *  per-month figure — the comparable number — without hiding what is charged. */
+export type Price = { amount: string; cadence: string; note?: string };
+
 export type PricingTier = {
   name: string;
-  price: string;
-  cadence: string;
+  monthly: Price;
+  annual: Price;
   tagline: string;
   features: string[];
   cta: string;
   featured: boolean;
 };
 
+/** Annual plans bill 12 months up front at a 20% discount. */
+export const annualDiscount = "-20%";
+
 export const pricing: PricingTier[] = [
   {
     name: "Launch",
-    price: "৳25,000",
-    cadence: "/month",
+    monthly: { amount: "৳25,000", cadence: "/month" },
+    annual: { amount: "৳20,000", cadence: "/month", note: "৳240,000 billed yearly" },
     tagline: "For local businesses getting serious about showing up online.",
     features: [
       "One channel, fully managed",
@@ -418,8 +427,8 @@ export const pricing: PricingTier[] = [
   },
   {
     name: "Growth",
-    price: "৳60,000",
-    cadence: "/month",
+    monthly: { amount: "৳60,000", cadence: "/month" },
+    annual: { amount: "৳48,000", cadence: "/month", note: "৳576,000 billed yearly" },
     tagline: "A multi-channel growth engine for brands ready to compound.",
     features: [
       "Up to 3 channels managed",
@@ -434,8 +443,9 @@ export const pricing: PricingTier[] = [
   },
   {
     name: "Scale",
-    price: "Custom",
-    cadence: "",
+    // Scoped per engagement, so there is no list price to discount either way.
+    monthly: { amount: "Custom", cadence: "" },
+    annual: { amount: "Custom", cadence: "" },
     tagline: "A full-funnel partnership for teams set on owning the market.",
     features: [
       "Everything in Growth",
