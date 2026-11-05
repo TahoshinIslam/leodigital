@@ -1,6 +1,6 @@
 -- Leotech CMS — schema + seed data (MariaDB 10.4+/XAMPP, MySQL 8+)
--- Import in phpMyAdmin: create a database (utf8mb4_unicode_ci), select it, Import this file.
--- Or: mysql -u root leotech_cms < database/leotech_cms_seed.sql
+-- Import in phpMyAdmin: create a database named `leodigital` (collation utf8mb4_unicode_ci), select it, then Import this file.
+-- Or: mysql -u root leodigital < database/leodigital_seed.sql
 --
 -- Includes: 1 super admin, 8 published services (English) + their Bangla translations.
 -- Super admin login: admin@leotechbd.com / Leotech-Admin-2026!
