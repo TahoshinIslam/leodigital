@@ -45,6 +45,66 @@
   animation: var(--animate-shimmer);
 }
 
+/* Hero entrance — pure CSS so it runs from first paint. Lines rise out of a
+   clip mask (padded so descenders like the g in "Marketing" are not cut).
+   They start part-visible on purpose: LCP is timed at the first main-thread
+   paint where the text shows, and compositor-only animation frames don't
+   count — a fully masked start would push LCP to after hydration. */
+@keyframes hero-rise {
+  from {
+    transform: translate3d(0, 55%, 0);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes hero-fade {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hero-settle {
+  from {
+    transform: scale(0.965);
+  }
+  to {
+    transform: none;
+  }
+}
+.hero-settle {
+  animation: hero-settle 1.4s var(--ease-luxe) both;
+}
+.hero-line {
+  display: block;
+  overflow: clip;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+.hero-line > span {
+  display: inline-block;
+  animation: hero-rise 1.05s var(--ease-luxe) both;
+}
+.hero-fade {
+  animation: hero-fade 0.9s var(--ease-luxe) both;
+}
+
+/* Hero poster: a static stand-in for the WebGL road — a vanishing-point glow
+   with light streaks in the brand green/cyan. Shown on low-end devices and
+   under the road until it fades in. */
+.hero-poster {
+  background:
+    radial-gradient(60% 45% at 62% 58%, rgba(34, 242, 239, 0.16), transparent 70%),
+    radial-gradient(55% 40% at 40% 62%, rgba(73, 220, 122, 0.18), transparent 70%),
+    conic-gradient(from 200deg at 58% 46%, transparent 0deg, rgba(73, 220, 122, 0.22) 14deg, transparent 26deg, rgba(34, 242, 239, 0.2) 52deg, transparent 66deg, rgba(73, 220, 122, 0.14) 96deg, transparent 110deg, transparent 360deg),
+    linear-gradient(180deg, #040a0a 0%, #061512 60%, #040a0a 100%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .backdrop-skeleton {
     animation: none;

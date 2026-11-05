@@ -1,7 +1,4 @@
 import CountUp from "@/components/site/anim/CountUp";
-import HeroStage from "@/components/site/anim/HeroStage";
-import Reveal from "@/components/site/anim/Reveal";
-import SplitReveal from "@/components/site/anim/SplitReveal";
 import HeroBackdrop from "@/components/site/HeroBackdrop";
 import { Accent, Container, GhostButton, PrimaryButton } from "@/components/site/ui";
 import { stats } from "@/content/site";
@@ -33,9 +30,12 @@ export default function Hero() {
       </div>
 
       <Container className="relative z-10">
-        <HeroStage>
+        {/* The entrance is CSS (see .hero-* in globals.css), not GSAP: it starts
+            at first paint instead of waiting for hydration, so the headline —
+            the page's LCP element — is visible within a frame of FCP. */}
+        <div className="hero-settle origin-center">
           <div className="flex min-h-[620px] flex-col justify-center gap-8 pt-[90px] pb-4">
-            <Reveal delay={0.15}>
+            <div className="hero-fade [animation-delay:120ms]">
               <div className="inline-flex items-center gap-3.5 self-start">
                 <span
                   aria-hidden
@@ -46,32 +46,34 @@ export default function Hero() {
                   Digital marketing agency · Dhaka
                 </span>
               </div>
-            </Reveal>
+            </div>
 
-            <SplitReveal
-              as="h1"
-              immediate
-              delay={0.25}
-              className="m-0 max-w-[16ch] text-[clamp(60px,8.4vw,132px)] leading-[0.9] font-medium tracking-[-0.052em] text-white"
-            >
-              Marketing that creates <Accent>market leaders.</Accent>
-            </SplitReveal>
+            <h1 className="m-0 max-w-[16ch] text-[clamp(60px,8.4vw,132px)] leading-[0.9] font-medium tracking-[-0.052em] text-white">
+              <span className="hero-line">
+                <span>Marketing that creates</span>
+              </span>{" "}
+              <span className="hero-line">
+                <span className="[animation-delay:110ms]">
+                  <Accent>market leaders.</Accent>
+                </span>
+              </span>
+            </h1>
 
-            <Reveal delay={0.75}>
+            <div className="hero-fade [animation-delay:420ms]">
               <p className="m-0 max-w-[540px] font-body text-lg leading-relaxed text-white/65">
                 Leotech is the digital marketing partner behind Bangladesh&rsquo;s ambitious brands. SEO,
                 performance media, content, and web experiences — engineered to compound.
               </p>
-            </Reveal>
+            </div>
 
-            <Reveal delay={0.9}>
+            <div className="hero-fade [animation-delay:540ms]">
               <div className="flex flex-wrap items-center gap-4">
                 <PrimaryButton href="#contact">Book a free consultation</PrimaryButton>
                 <GhostButton href="#services">View services</GhostButton>
               </div>
-            </Reveal>
+            </div>
           </div>
-        </HeroStage>
+        </div>
 
         <div className="flex justify-center pt-1 pb-[26px]">
           <div className="animate-scroll-cue flex flex-col items-center gap-2">

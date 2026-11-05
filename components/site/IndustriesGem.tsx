@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import EmeraldGem from "@/components/site/EmeraldGem";
+import dynamic from "next/dynamic";
+import { useRichGraphics } from "@/lib/graphics";
+
+const EmeraldGem = dynamic(() => import("@/components/site/EmeraldGem"), { ssr: false });
 
 // The gem is only ever shown at lg+, so gate the mount there too — no point
 // holding a WebGL context on viewports that never display it.
@@ -35,6 +38,7 @@ export default function IndustriesGem() {
   const ref = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const isWide = useIsWide();
+  const rich = useRichGraphics();
 
   useEffect(() => {
     const el = ref.current;
@@ -50,7 +54,7 @@ export default function IndustriesGem() {
 
   return (
     <div ref={ref} className="h-full w-full">
-      {isWide && mounted && <EmeraldGem />}
+      {rich && isWide && mounted && <EmeraldGem />}
     </div>
   );
 }

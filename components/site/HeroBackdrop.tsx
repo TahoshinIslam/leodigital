@@ -1,8 +1,14 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useRef, useState } from "react";
 import { useCanvasReady } from "@/components/site/anim/useCanvasReady";
-import Hyperspeed, { type HyperspeedOptions } from "@/components/site/Hyperspeed";
+import type { HyperspeedOptions } from "@/components/site/Hyperspeed";
+import { useAfterIdle, useRichGraphics } from "@/lib/graphics";
+
+// three.js + postprocessing (~750 KB) load in their own chunk, only on devices
+// that will actually run the road, and only after the page is idle.
+const Hyperspeed = dynamic(() => import("@/components/site/Hyperspeed"), { ssr: false });
 
 /**
  * Module-level constant, not an inline literal: a fresh object identity on each
@@ -55,7 +61,10 @@ export default function HeroBackdrop() {
   // new context + scene is built. This is what makes the road come back after a
   // context loss on refresh, instead of showing once and then vanishing.
   const [generation, setGeneration] = useState(0);
-  const ready = useCanvasReady(ref, true);
+  const rich = useRichGraphics();
+  const idle = useAfterIdle();
+  const run = rich && idle;
+  const ready = useCanvasReady(ref, run);
 
   const handleContextLost = useCallback(() => {
     setGeneration((g) => g + 1);
@@ -73,12 +82,19 @@ export default function HeroBackdrop() {
 
   return (
     <div ref={ref} className="relative h-full w-full overflow-hidden">
-      <Hyperspeed key={generation} effectOptions={LEOTECH_HYPERSPEED} onContextLost={handleContextLost} />
-      <div
-        className={`backdrop-skeleton pointer-events-none absolute inset-0 transition-opacity duration-700 ease-luxe ${
-          ready ? "opacity-0" : "opacity-100"
-        }`}
-      />
+      {/* Static poster: what low-end devices keep, and what everyone sees until
+          the road fades in. Pure CSS, so it costs nothing on the critical path. */}
+      <div aria-hidden className="hero-poster pointer-events-none absolute inset-0" />
+      {run ? (
+        <>
+          <Hyperspeed key={generation} effectOptions={LEOTECH_HYPERSPEED} onContextLost={handleContextLost} />
+          <div
+            className={`backdrop-skeleton pointer-events-none absolute inset-0 transition-opacity duration-700 ease-luxe ${
+              ready ? "opacity-0" : "opacity-100"
+            }`}
+          />
+        </>
+      ) : null}
     </div>
   );
 }

@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import MenuOverlay from "@/components/site/nav/MenuOverlay";
+import dynamic from "next/dynamic";
+
+// The full-screen menu is code-split and mounted on first open only, so no
+// visitor pays to download or hydrate it until they tap the hamburger.
+const MenuOverlay = dynamic(() => import("@/components/site/nav/MenuOverlay"), { ssr: false });
 import type { NavService } from "@/components/site/nav/types";
 import { navLinks } from "@/content/site";
 
@@ -11,6 +15,7 @@ export default function Nav({ services }: { services: NavService[] }) {
   const pathname = usePathname();
   const [active, setActive] = useState<string>("");
   const [open, setOpen] = useState(false);
+  const [menuLoaded, setMenuLoaded] = useState(false);
   const burgerRef = useRef<HTMLButtonElement>(null);
   const onHome = pathname === "/";
 
@@ -115,7 +120,13 @@ export default function Nav({ services }: { services: NavService[] }) {
               aria-label="Open menu"
               aria-expanded={open}
               aria-haspopup="dialog"
-              onClick={() => setOpen(true)}
+              onClick={() => {
+                setMenuLoaded(true);
+                // Mount closed first, then open on the next frame so the
+                // entrance transition runs.
+                requestAnimationFrame(() => requestAnimationFrame(() => setOpen(true)));
+              }}
+              onPointerEnter={() => void import("@/components/site/nav/MenuOverlay")}
               className="flex h-11 w-11 items-center justify-center rounded-full border border-white/12 bg-[rgba(9,19,18,0.6)] backdrop-blur-[16px] lg:hidden"
             >
               <span className="relative block h-4 w-5" aria-hidden>
@@ -128,7 +139,7 @@ export default function Nav({ services }: { services: NavService[] }) {
         </div>
       </nav>
 
-      <MenuOverlay open={open} onClose={close} services={services} pathname={pathname} />
+      {menuLoaded ? <MenuOverlay open={open} onClose={close} services={services} pathname={pathname} /> : null}
     </>
   );
 }

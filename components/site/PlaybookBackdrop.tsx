@@ -1,9 +1,13 @@
 "use client";
 
 import FixedBackdrop from "@/components/site/anim/FixedBackdrop";
-import DotField from "@/components/site/DotField";
+import dynamic from "next/dynamic";
+import { useRichGraphics } from "@/lib/graphics";
+
+const DotField = dynamic(() => import("@/components/site/DotField"), { ssr: false });
 
 export default function PlaybookBackdrop() {
+  if (!useRichGraphics()) return null;
   return (
     <FixedBackdrop>
       {/* This section is almost entirely body copy, so the field is held back —

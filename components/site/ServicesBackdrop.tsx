@@ -1,9 +1,14 @@
 "use client";
 
 import FixedBackdrop from "@/components/site/anim/FixedBackdrop";
-import Orb from "@/components/site/Orb";
+import dynamic from "next/dynamic";
+import { useRichGraphics } from "@/lib/graphics";
+
+const Orb = dynamic(() => import("@/components/site/Orb"), { ssr: false });
 
 export default function ServicesBackdrop() {
+  // Low-end devices keep the section's static gradient instead.
+  if (!useRichGraphics()) return null;
   return (
     <FixedBackdrop>
       {/* Square keyed to viewport height, then pushed slightly past it. The orb's

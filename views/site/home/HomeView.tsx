@@ -1,5 +1,4 @@
-import CursorGlow from "@/components/site/CursorGlow";
-import SmoothScroll from "@/components/site/anim/SmoothScroll";
+import IdleEnhancements from "@/components/site/IdleEnhancements";
 import { getPublishedServices } from "@/server/modules/services";
 import BrandWeb from "@/views/site/home/sections/BrandWeb";
 import Contact from "@/views/site/home/sections/Contact";
@@ -15,15 +14,14 @@ import Why from "@/views/site/home/sections/Why";
 
 /**
  * The marketing home page. Smooth scrolling and the cursor glow are mounted
- * here rather than in the site layout, so service detail pages don't download
- * Lenis/GSAP at all.
+ * here (after the page is idle) rather than in the site layout, so service
+ * detail pages never download Lenis at all.
  */
 export default async function HomeView() {
   const services = await getPublishedServices();
   return (
     <>
-      <SmoothScroll />
-      <CursorGlow />
+      <IdleEnhancements />
       <Hero />
       <Why />
       <Industries />
