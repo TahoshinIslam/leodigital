@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { buttonClass, type BtnVariant } from "@/components/admin/ui";
 import { initialActionState, type ActionState } from "@/lib/action-state";
+import { useAdminT } from "@/lib/i18n/admin/client";
 
 /**
  * A one-button form bound to a Server Action (publish toggle, delete, role
@@ -31,6 +32,7 @@ export default function InlineAction({
   title?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, initialActionState);
+  const working = useAdminT().common.working;
   return (
     <form
       action={formAction}
@@ -44,7 +46,7 @@ export default function InlineAction({
       ))}
       <button type="submit" disabled={pending} title={title ?? label} className={buttonClass(variant, small)}>
         {icon}
-        <span>{pending ? (pendingLabel ?? "Working…") : label}</span>
+        <span>{pending ? (pendingLabel ?? working) : label}</span>
       </button>
       {state.at && !state.ok && state.message ? (
         <span role="alert" className="text-[12px] font-medium text-a-rose">{state.message}</span>

@@ -1,10 +1,13 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/server/auth/session";
 import LoginForm from "@/views/admin/auth/LoginForm";
+import AdminLangToggle from "@/components/admin/AdminLangToggle";
+import { getAdminT } from "@/lib/i18n/admin";
 
 export default async function LoginView({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   if (await getSessionUser()) redirect("/admin");
   const { next } = await searchParams;
+  const L = (await getAdminT()).login;
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
@@ -18,13 +21,13 @@ export default async function LoginView({ searchParams }: { searchParams: Promis
           </div>
           <div>
             <h1 className="m-0 max-w-[520px] text-[44px] leading-[1.05] font-extrabold tracking-[-0.03em]">
-              Your services, pages and SEO — <span className="bg-[linear-gradient(90deg,#8fb0ff,#45e0e8)] bg-clip-text text-transparent">in one place.</span>
+              {L.heroTitle} <span className="bg-[linear-gradient(90deg,#8fb0ff,#45e0e8)] bg-clip-text text-transparent">{L.heroAccent}</span>
             </h1>
             <p className="mt-4 max-w-[440px] text-[15px] text-white/65">
-              Publish a new service page, update its search snippet and see it live in seconds, without touching code.
+              {L.heroBody}
             </p>
           </div>
-          <p className="m-0 font-admin-mono text-[11px] tracking-[0.14em] text-white/40 uppercase">Authorised staff only · activity is logged</p>
+          <p className="m-0 font-admin-mono text-[11px] tracking-[0.14em] text-white/40 uppercase">{L.staff}</p>
         </div>
       </div>
 
@@ -33,8 +36,9 @@ export default async function LoginView({ searchParams }: { searchParams: Promis
           <div className="mb-8 lg:hidden">
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--a-brand),var(--a-violet))] font-extrabold text-white">L</span>
           </div>
-          <h2 className="m-0 text-[28px] font-extrabold tracking-[-0.025em] text-a-t1">Welcome back</h2>
-          <p className="m-0 mt-1.5 text-[14px] text-a-t2">Sign in to manage the Leotech website.</p>
+          <div className="mb-6 flex justify-end"><AdminLangToggle /></div>
+          <h2 className="m-0 text-[28px] font-extrabold tracking-[-0.025em] text-a-t1">{L.welcome}</h2>
+          <p className="m-0 mt-1.5 text-[14px] text-a-t2">{L.sub}</p>
           <LoginForm next={next ?? ""} />
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use server";
 
 import { id as idSchema } from "@/lib/validation/common";
+import { getAdminT } from "@/lib/i18n/admin";
 import { action } from "@/server/http/action";
 import { badRequest } from "@/server/http/errors";
 import { createUser, updateUser } from "@/server/modules/users";
@@ -12,7 +13,7 @@ const s = (fd: FormData, k: string) => {
 
 export const createUserAction = action("users:manage", async ({ user, ip, formData }) => {
   const u = await createUser(user, { name: s(formData, "name"), email: s(formData, "email"), password: s(formData, "password"), role: s(formData, "role") }, { ip });
-  return { message: `Added ${u.name}` };
+  return { message: (await getAdminT()).ok.added(u.name) };
 });
 
 export const updateUserAction = action("users:manage", async ({ user, ip, formData }) => {
@@ -23,5 +24,5 @@ export const updateUserAction = action("users:manage", async ({ user, ip, formDa
   if (formData.has("isActive")) patch.isActive = formData.get("isActive") === "true";
   if (s(formData, "password")) patch.password = s(formData, "password");
   const u = await updateUser(user, id.data, patch, { ip });
-  return { message: `Updated ${u.name}` };
+  return { message: (await getAdminT()).ok.updated(u.name) };
 });

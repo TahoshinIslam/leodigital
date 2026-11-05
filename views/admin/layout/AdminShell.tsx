@@ -3,9 +3,11 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import MobileNavToggle from "@/components/admin/MobileNavToggle";
 import SidebarNav from "@/components/admin/SidebarNav";
+import AdminLangToggle from "@/components/admin/AdminLangToggle";
 import ThemeToggle from "@/components/admin/ThemeToggle";
+import { getAdminT } from "@/lib/i18n/admin";
 import { Avatar } from "@/components/admin/ui";
-import { can, ROLE_LABELS } from "@/lib/auth/permissions";
+import { can } from "@/lib/auth/permissions";
 import { requirePageUser } from "@/server/auth/guard";
 import { logoutAction } from "@/server/actions/auth.actions";
 import * as services from "@/server/repositories/service.repository";
@@ -16,7 +18,8 @@ import * as services from "@/server/repositories/service.repository";
  */
 export default async function AdminShell({ children }: { children: React.ReactNode }) {
   const user = await requirePageUser();
-  const [counts, jar] = await Promise.all([services.counts(), cookies()]);
+  const [counts, jar, t] = await Promise.all([services.counts(), cookies(), getAdminT()]);
+  const s = t.shell;
   const theme = jar.get("admin_theme")?.value === "dark" ? "dark" : "light";
 
   return (
@@ -29,7 +32,7 @@ export default async function AdminShell({ children }: { children: React.ReactNo
           </span>
           <div className="min-w-0">
             <div className="text-[15px] font-extrabold tracking-[-0.01em] text-a-t1">Leotech</div>
-            <div className="truncate text-[11.5px] text-a-t3">Digital marketing CMS</div>
+            <div className="truncate text-[11.5px] text-a-t3">{s.cms}</div>
           </div>
         </div>
 
@@ -45,8 +48,8 @@ export default async function AdminShell({ children }: { children: React.ReactNo
             >
               <Sparkles size={16} className="text-a-violet" />
               <span>
-                <strong className="block text-a-t1">Publish faster</strong>
-                Draft a new service page
+                <strong className="block text-a-t1">{s.publishFaster}</strong>
+                {s.draftNew}
               </span>
             </Link>
           </div>
@@ -56,10 +59,10 @@ export default async function AdminShell({ children }: { children: React.ReactNo
           <Avatar name={user.name} />
           <div className="min-w-0 flex-1">
             <div className="truncate text-[13px] font-bold text-a-t1">{user.name}</div>
-            <div className="truncate text-[11.5px] text-a-t3">{ROLE_LABELS[user.role]}</div>
+            <div className="truncate text-[11.5px] text-a-t3">{t.roles[user.role]}</div>
           </div>
           <form action={logoutAction}>
-            <button type="submit" aria-label="Sign out" title="Sign out" className="flex h-9 w-9 items-center justify-center rounded-lg text-a-t3 hover:bg-a-card2 hover:text-a-rose">
+            <button type="submit" aria-label={s.signOut} title={s.signOut} className="flex h-9 w-9 items-center justify-center rounded-lg text-a-t3 hover:bg-a-card2 hover:text-a-rose">
               <LogOut size={17} />
             </button>
           </form>
@@ -74,12 +77,12 @@ export default async function AdminShell({ children }: { children: React.ReactNo
           <MobileNavToggle />
           <form action="/admin/services" role="search" className="relative max-w-[440px] flex-1">
             <Search size={16} className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-a-t3" aria-hidden />
-            <label htmlFor="admin-search" className="sr-only">Search services</label>
+            <label htmlFor="admin-search" className="sr-only">{s.searchLabel}</label>
             <input
               id="admin-search"
               name="q"
               type="search"
-              placeholder="Search services…"
+              placeholder={s.search}
               maxLength={100}
               className="h-10 w-full rounded-xl border border-a-bd bg-a-card pr-3 pl-10 text-[13.5px] text-a-t1 placeholder:text-a-t3 focus:border-a-brand focus:shadow-[0_0_0_4px_var(--a-ring)] focus:outline-none"
             />
@@ -87,8 +90,9 @@ export default async function AdminShell({ children }: { children: React.ReactNo
           <div className="ml-auto flex items-center gap-2">
             <span className="hidden items-center gap-2 rounded-xl border border-a-bd bg-a-card px-3 py-2 text-[12.5px] text-a-t2 md:inline-flex">
               <span aria-hidden className="h-2 w-2 rounded-full bg-a-em shadow-[0_0_0_3px_color-mix(in_srgb,var(--a-em)_20%,transparent)]" />
-              {counts.published} live · {counts.draft} draft{counts.draft === 1 ? "" : "s"}
+              {counts.published} {s.live} · {counts.draft} {counts.draft === 1 ? s.draft : s.drafts}
             </span>
+            <AdminLangToggle />
             <ThemeToggle initial={theme} />
           </div>
         </header>

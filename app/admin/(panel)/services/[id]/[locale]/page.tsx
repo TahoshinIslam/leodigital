@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
+import { getAdminT } from "@/lib/i18n/admin";
 import { notFound } from "next/navigation";
 import { requirePageUser } from "@/server/auth/guard";
 import ServiceTranslationView from "@/views/admin/services/ServiceTranslationView";
 
-export const metadata: Metadata = { title: "Translate service" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getAdminT();
+  return { title: t.translate.pageTitle };
+}
 
 export default async function TranslateServicePage({ params }: PageProps<"/admin/services/[id]/[locale]">) {
   const { id, locale } = await params;

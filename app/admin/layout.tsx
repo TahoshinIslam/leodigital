@@ -4,7 +4,7 @@ import "../globals.css";
 import AdminRoot, { AdminRootFallback } from "@/views/admin/layout/AdminRoot";
 
 export const metadata: Metadata = {
-  title: { default: "Admin", template: "%s · Leotech Admin" },
+  title: { default: "Admin", template: "%s · Leotech" },
   robots: { index: false, follow: false },
   icons: { icon: "/favicon.ico" },
 };

@@ -2,6 +2,7 @@
 
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useAdminT } from "@/lib/i18n/admin/client";
 
 type Key = string;
 type Row = { _k: number; values: Record<Key, string> };
@@ -25,6 +26,7 @@ export default function Repeater({
   max?: number;
   error?: string[];
 }) {
+  const R = useAdminT().repeater;
   const blank = () => Object.fromEntries(fields.map((f) => [f.key, ""])) as Record<Key, string>;
   const [rows, setRows] = useState<Row[]>(() => defaultValue.map((r, i) => ({ values: { ...r }, _k: i })));
   const [nextKey, setNextKey] = useState(defaultValue.length);
@@ -49,9 +51,9 @@ export default function Repeater({
           <div className="mb-2.5 flex items-center justify-between">
             <span className="font-admin-mono text-[11px] text-a-t3">#{i + 1}</span>
             <div className="flex gap-1">
-              <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up" className="flex h-7 w-7 items-center justify-center rounded-lg text-a-t3 hover:bg-a-card hover:text-a-t1 disabled:opacity-30"><ArrowUp size={14} /></button>
-              <button type="button" onClick={() => move(i, 1)} disabled={i === rows.length - 1} aria-label="Move down" className="flex h-7 w-7 items-center justify-center rounded-lg text-a-t3 hover:bg-a-card hover:text-a-t1 disabled:opacity-30"><ArrowDown size={14} /></button>
-              <button type="button" onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))} aria-label="Remove" className="flex h-7 w-7 items-center justify-center rounded-lg text-a-t3 hover:bg-a-rose/10 hover:text-a-rose"><Trash2 size={14} /></button>
+              <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label={R.up} className="flex h-7 w-7 items-center justify-center rounded-lg text-a-t3 hover:bg-a-card hover:text-a-t1 disabled:opacity-30"><ArrowUp size={14} /></button>
+              <button type="button" onClick={() => move(i, 1)} disabled={i === rows.length - 1} aria-label={R.down} className="flex h-7 w-7 items-center justify-center rounded-lg text-a-t3 hover:bg-a-card hover:text-a-t1 disabled:opacity-30"><ArrowDown size={14} /></button>
+              <button type="button" onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))} aria-label={R.remove} className="flex h-7 w-7 items-center justify-center rounded-lg text-a-t3 hover:bg-a-rose/10 hover:text-a-rose"><Trash2 size={14} /></button>
             </div>
           </div>
           <div className="flex flex-col gap-2">

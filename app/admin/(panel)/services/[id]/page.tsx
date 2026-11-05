@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
+import { getAdminT } from "@/lib/i18n/admin";
 import { notFound } from "next/navigation";
 import { requirePageUser } from "@/server/auth/guard";
 import ServiceEditorView from "@/views/admin/services/ServiceEditorView";
 
-export const metadata: Metadata = { title: "Edit service" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getAdminT();
+  return { title: t.common.edit };
+}
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> };
 

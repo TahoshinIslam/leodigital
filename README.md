@@ -4,6 +4,7 @@ Next.js 16.4 (App Router, Cache Components) · React 19.3 · MySQL/MariaDB (XAMP
 
 - **Public site**: the marketing home page, `/services` and one detail page per service at `/services/[slug]`. Every detail page uses the same layout, filled from the database.
 - **Admin panel** at `/admin`: dashboard (greeting banner with live clock and calendar), service CRUD, publish/unpublish, image uploads, URL slugs, SEO fields, users and roles (RBAC), activity log, Core Web Vitals.
+- **Admin in English or Bangla**: switch with the **EN | বাংলা** toggle in the top bar or on the login page; the choice is remembered per browser. Interface strings live in `lib/i18n/admin/en.ts` and `bn.ts` (type-checked to match). Server messages and validation errors are translated as well.
 - **JSON API** under `/api`: a public read API (CORS-enabled) and an authenticated admin API.
 
 ## Quick start (XAMPP)

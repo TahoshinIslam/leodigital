@@ -423,8 +423,8 @@ html[data-motion="off"] main canvas {
   --color-a-amber: var(--a-amber);
   --color-a-rose: var(--a-rose);
   --color-a-ring: var(--a-ring);
-  --font-admin: var(--font-jakarta), system-ui, -apple-system, sans-serif;
-  --font-admin-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --font-admin: var(--font-jakarta), var(--font-bengali, sans-serif), system-ui, -apple-system, sans-serif;
+  --font-admin-mono: var(--font-jetbrains), var(--font-bengali, monospace), ui-monospace, monospace;
   --shadow-a: var(--a-sh);
 }
 

@@ -3,10 +3,12 @@
 import { PanelLeft } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
+import { useAdminT } from "@/lib/i18n/admin/client";
 
 /** Opens/closes the sidebar drawer on small screens by flipping a data attribute. */
 export default function MobileNavToggle() {
   const pathname = usePathname();
+  const label = useAdminT().shell.toggleNav;
   // Close the drawer after navigating.
   useEffect(() => {
     document.querySelector<HTMLElement>(".admin-root")?.removeAttribute("data-nav");
@@ -14,7 +16,7 @@ export default function MobileNavToggle() {
   return (
     <button
       type="button"
-      aria-label="Toggle navigation"
+      aria-label={label}
       onClick={() => {
         const root = document.querySelector<HTMLElement>(".admin-root");
         if (!root) return;

@@ -67,8 +67,8 @@ export function Pill({ tone = "muted", children, dot }: { tone?: Tone; children:
   );
 }
 
-export function StatusPill({ status }: { status: "draft" | "published" }) {
-  return status === "published" ? <Pill tone="em" dot>Published</Pill> : <Pill tone="amber" dot>Draft</Pill>;
+export function StatusPill({ status, labels = { published: "Published", draft: "Draft" } }: { status: "draft" | "published"; labels?: { published: string; draft: string } }) {
+  return status === "published" ? <Pill tone="em" dot>{labels.published}</Pill> : <Pill tone="amber" dot>{labels.draft}</Pill>;
 }
 
 export function IconTile({ tone, children }: { tone: Tone; children: ReactNode }) {
@@ -123,13 +123,14 @@ export function Avatar({ name, size = 36 }: { name: string; size?: number }) {
   );
 }
 
-const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-export function relativeTime(iso: string, now: number) {
+const rtfs = { en: new Intl.RelativeTimeFormat("en", { numeric: "auto" }), bn: new Intl.RelativeTimeFormat("bn", { numeric: "auto" }) };
+export function relativeTime(iso: string, now: number, lang: "en" | "bn" = "en") {
+  const rtf = rtfs[lang];
   const diff = (new Date(iso).getTime() - now) / 1000;
   const abs = Math.abs(diff);
   if (abs < 60) return rtf.format(Math.round(diff), "second");
   if (abs < 3600) return rtf.format(Math.round(diff / 60), "minute");
   if (abs < 86400) return rtf.format(Math.round(diff / 3600), "hour");
   if (abs < 86400 * 30) return rtf.format(Math.round(diff / 86400), "day");
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return new Date(iso).toLocaleDateString(lang === "bn" ? "bn-BD" : "en-GB", { day: "numeric", month: "short", year: "numeric" });
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { useAdminT } from "@/lib/i18n/admin/client";
 
 // One shared 1-second ticker for every clock on the page.
 let now = 0;
@@ -35,10 +36,12 @@ export function useNow() {
 }
 
 export default function LiveClock({ timeZone }: { timeZone: string }) {
+  const tr = useAdminT();
   const t = useNow();
   const d = t ? new Date(t) : null;
+  const nu = tr.lang === "bn" ? "bn-BD" : "en-US";
   const parts = d
-    ? new Intl.DateTimeFormat("en-US", { timeZone, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }).formatToParts(d)
+    ? new Intl.DateTimeFormat(nu, { timeZone, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }).formatToParts(d)
     : [];
   const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "--";
   const tzName = d
@@ -49,7 +52,7 @@ export default function LiveClock({ timeZone }: { timeZone: string }) {
     <div className="flex flex-col gap-1">
       <div className="flex items-center gap-2 font-admin-mono text-[10.5px] tracking-[0.16em] text-white/60 uppercase">
         <span aria-hidden className="h-1.5 w-1.5 animate-[a-pulse_2s_ease-in-out_infinite] rounded-full bg-[#3ed598]" />
-        Local time · {tzName || timeZone}
+        {tr.time.timeZone} · {tzName || timeZone}
       </div>
       <time
         dateTime={d?.toISOString()}
@@ -65,7 +68,7 @@ export default function LiveClock({ timeZone }: { timeZone: string }) {
         <span className="ml-1 text-[13px] font-bold tracking-[0.08em] text-[#8fb0ff]">{d ? get("dayPeriod") : ""}</span>
       </time>
       <div className="text-[13px] text-white/70">
-        {d ? new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(d) : " "}
+        {d ? new Intl.DateTimeFormat(tr.lang === "bn" ? "bn-BD" : "en-GB", { timeZone, weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(d) : " "}
       </div>
     </div>
   );

@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { getAdminT } from "@/lib/i18n/admin";
 
 /** English / বাংলা tabs on the service editor. */
-export default function LanguageTabs({ id, active }: { id: number; active: "en" | "bn" }) {
+export default async function LanguageTabs({ id, active }: { id: number; active: "en" | "bn" }) {
+  const label = (await getAdminT()).translate.tabs;
   const tab = (href: string, label: React.ReactNode, on: boolean) => (
     <Link
       href={href}
@@ -12,7 +14,7 @@ export default function LanguageTabs({ id, active }: { id: number; active: "en" 
     </Link>
   );
   return (
-    <nav aria-label="Content language" className="flex w-fit gap-1 rounded-xl bg-a-card2 p-1">
+    <nav aria-label={label} className="flex w-fit gap-1 rounded-xl bg-a-card2 p-1">
       {tab(`/admin/services/${id}`, "English", active === "en")}
       {tab(`/admin/services/${id}/bn`, <span lang="bn">বাংলা</span>, active === "bn")}
     </nav>
