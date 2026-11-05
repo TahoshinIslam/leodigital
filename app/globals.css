@@ -8,10 +8,11 @@
   --color-ink-footer: #05100c;
   --color-accent: #49dc7a;
 
-  --font-sans: var(--font-instrument-sans), sans-serif;
-  --font-body: var(--font-manrope), sans-serif;
-  --font-serif: var(--font-newsreader), serif;
-  --font-mono: var(--font-plex-mono), monospace;
+  /* Bengali glyphs fall through to Hind Siliguri in every stack. */
+  --font-sans: var(--font-instrument-sans), var(--font-bengali, sans-serif), sans-serif;
+  --font-body: var(--font-manrope), var(--font-bengali, sans-serif), sans-serif;
+  --font-serif: var(--font-newsreader), var(--font-bengali, serif), serif;
+  --font-mono: var(--font-plex-mono), var(--font-bengali, monospace), monospace;
 
   --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
 
@@ -527,4 +528,26 @@ html[data-motion="off"] main canvas {
   50% {
     opacity: 0.35;
   }
+}
+
+/* Bangla typography: Bengali script has tall conjuncts and matras, so the
+   tight negative tracking and sub-1 line-heights tuned for Latin display type
+   would clip and crowd it. */
+:lang(bn) h1,
+:lang(bn) h2,
+:lang(bn) h3,
+:lang(bn) blockquote {
+  letter-spacing: 0 !important;
+  line-height: 1.28 !important;
+}
+:lang(bn) .font-mono,
+:lang(bn) .uppercase {
+  letter-spacing: 0.02em !important;
+}
+:lang(bn) .hero-line {
+  padding-bottom: 0.22em;
+  margin-bottom: -0.22em;
+}
+:lang(bn) em {
+  font-style: normal;
 }

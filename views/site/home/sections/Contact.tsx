@@ -1,5 +1,5 @@
 import { Container } from "@/components/site/ui";
-import { contact } from "@/content/site";
+import { getContent } from "@/content";
 
 const iconClass = "text-accent";
 
@@ -33,14 +33,16 @@ const label = "font-mono text-[11px] tracking-[0.2em] text-white/40 uppercase";
 const value = "text-[22px] font-semibold tracking-[-0.01em] text-white";
 const note = "m-0 font-body text-[14.5px] leading-relaxed text-white/60";
 
-export default function Contact() {
+export default async function Contact() {
+  const { home, contact } = await getContent();
+  const c = home.contact;
   return (
     <section id="contact" className="bg-ink pb-[clamp(96px,10vw,150px)]">
       <Container>
         <div className="grid gap-8 border-t border-white/10 pt-13 md:grid-cols-3">
           <div className="flex flex-col gap-3.5">
             <Phone />
-            <span className={label}>Call</span>
+            <span className={label}>{c.call}</span>
             <div className={value}>
               {contact.phones.map((p) => (
                 <div key={p}>
@@ -50,29 +52,29 @@ export default function Contact() {
                 </div>
               ))}
             </div>
-            <p className={note}>We answer Saturday to Thursday, 10:00–18:00.</p>
+            <p className={note}>{c.callNote}</p>
           </div>
 
           <div className="flex flex-col gap-3.5">
             <Mail />
-            <span className={label}>Write</span>
+            <span className={label}>{c.write}</span>
             <div className={value}>
               <a href={`mailto:${contact.email}`} className="no-underline hover:text-accent">
                 {contact.email}
               </a>
             </div>
-            <p className={note}>We reply within 8 hours on business days.</p>
+            <p className={note}>{c.writeNote}</p>
           </div>
 
           <div className="flex flex-col gap-3.5">
             <Pin />
-            <span className={label}>Visit</span>
+            <span className={label}>{c.visit}</span>
             <div className={value}>
               {contact.address.map((line) => (
                 <div key={line}>{line}</div>
               ))}
             </div>
-            <p className={note}>Come see us, Saturday to Thursday, 10:00–18:00.</p>
+            <p className={note}>{c.visitNote}</p>
           </div>
         </div>
       </Container>

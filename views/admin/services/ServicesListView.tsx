@@ -9,6 +9,7 @@ import { listQuery } from "@/lib/validation/service";
 import { deleteServiceAction, togglePublishAction } from "@/server/actions/services.actions";
 import type { SessionUser } from "@/server/auth/session";
 import { listServices } from "@/server/modules/services";
+import { translatedLocales } from "@/server/repositories/service.repository";
 
 type SP = Record<string, string | string[] | undefined>;
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
@@ -18,7 +19,7 @@ export default async function ServicesListView({ user, searchParams }: { user: S
 
   const parsed = listQuery.safeParse({ q: first(searchParams.q), status: first(searchParams.status) || undefined, page: first(searchParams.page) });
   const query = parsed.success ? parsed.data : { page: 1, perPage: 20 };
-  const result = await listServices(user, query);
+  const [result, translated] = await Promise.all([listServices(user, query), translatedLocales()]);
   const pages = Math.max(1, Math.ceil(result.total / result.perPage));
   const now = requestNow();
   const canPublish = can(user.role, "services:publish");
@@ -99,7 +100,14 @@ export default async function ServicesListView({ user, searchParams }: { user: S
                   <tr key={s.id} className="border-t border-a-bd align-middle hover:bg-a-card2/60">
                     <td className="px-5 py-3.5">
                       <Link href={`/admin/services/${s.id}`} className="text-[14px] font-bold text-a-t1 no-underline hover:text-a-brand">{s.title}</Link>
-                      <div className="font-admin-mono text-[11.5px] text-a-t3">/services/{s.slug}</div>
+                      <div className="flex items-center gap-2 font-admin-mono text-[11.5px] text-a-t3">
+                        /services/{s.slug}
+                        {translated.get(s.id)?.includes("bn") ? (
+                          <Link href={`/admin/services/${s.id}/bn`} lang="bn" title="Bangla translation" className="rounded bg-a-violet/10 px-1.5 py-px font-admin text-[10.5px] font-semibold text-a-violet no-underline">বাংলা ✓</Link>
+                        ) : (
+                          <Link href={`/admin/services/${s.id}/bn`} title="Add a Bangla translation" className="rounded bg-a-card2 px-1.5 py-px font-admin text-[10.5px] font-semibold text-a-t3 no-underline hover:text-a-violet">+ বাংলা</Link>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-3.5"><StatusPill status={s.status} /></td>
                     <td className="px-3 py-3.5 font-admin-mono text-[12.5px] text-a-t2">{s.sortOrder}</td>

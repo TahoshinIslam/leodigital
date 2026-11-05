@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { id as idSchema } from "@/lib/validation/common";
 import { action } from "@/server/http/action";
 import { badRequest } from "@/server/http/errors";
-import { createService, deleteService, setPublished, updateService } from "@/server/modules/services";
+import { createService, deleteService, saveServiceTranslation, setPublished, updateService } from "@/server/modules/services";
 
 /** FormData → plain object for the service schema. Repeaters arrive as JSON strings. */
 function readServiceForm(fd: FormData) {
@@ -70,4 +70,31 @@ export const deleteServiceAction = action("services:delete", async ({ user, ip, 
   await deleteService(user, readId(formData), { ip });
   if (formData.get("redirect") === "list") redirect("/admin/services?deleted=1");
   return { message: "Service deleted" };
+});
+
+export const saveTranslationAction = action("services:update", async ({ user, ip, formData }) => {
+  const json = (k: string) => {
+    try {
+      const v = JSON.parse(String(formData.get(k) ?? "[]"));
+      return Array.isArray(v) ? v : [];
+    } catch {
+      throw badRequest(`Could not read the ${k} list`);
+    }
+  };
+  const str = (k: string) => String(formData.get(k) ?? "");
+  await saveServiceTranslation(user, readId(formData), str("locale"), {
+    title: str("title"),
+    eyebrow: str("eyebrow"),
+    summary: str("summary"),
+    body: str("body"),
+    heroImageAlt: str("heroImageAlt"),
+    features: json("features"),
+    processSteps: json("processSteps"),
+    faqs: json("faqs"),
+    ctaLabel: str("ctaLabel"),
+    priceFrom: str("priceFrom"),
+    seoTitle: str("seoTitle"),
+    seoDescription: str("seoDescription"),
+  }, { ip });
+  return { message: "Translation saved" };
 });

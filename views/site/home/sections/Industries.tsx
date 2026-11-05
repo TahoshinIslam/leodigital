@@ -1,9 +1,11 @@
 import Reveal from "@/components/site/anim/Reveal";
 import IndustriesGem from "@/components/site/IndustriesGem";
 import { Accent, Container, Eyebrow, Lede, SectionHeading, TileCard } from "@/components/site/ui";
-import { industries } from "@/content/site";
+import { getContent } from "@/content";
 
-export default function Industries() {
+export default async function Industries() {
+  const { home, industries } = await getContent();
+  const c = home.industries;
   return (
     <section
       id="industries"
@@ -31,13 +33,12 @@ export default function Industries() {
 
       <Container className="relative">
         <div className="flex max-w-[760px] flex-col gap-[22px]">
-          <Eyebrow index="02">Who we serve</Eyebrow>
+          <Eyebrow index="02">{c.eyebrow}</Eyebrow>
           <SectionHeading>
-            Eight industries. One goal: <Accent>own your niche.</Accent>
+            {c.heading[0]}<Accent>{c.heading[1]}</Accent>
           </SectionHeading>
           <Lede>
-            Every market has its own buying journey. We have run it, measured it, and won it — in each of
-            these.
+            {c.lede}
           </Lede>
         </div>
 

@@ -1,12 +1,14 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
-import type { Paginated, Service, ServiceSummary } from "@/lib/types";
+import { isLocale, type Locale } from "@/lib/i18n/config";
+import type { Paginated, Service, ServiceFaq, ServiceItem, ServiceSummary } from "@/lib/types";
 import { fieldErrors } from "@/lib/validation/common";
 import {
   listQuery,
   publishInput,
   serviceInput,
   servicePatch,
+  translationInput,
   type ServicePatch,
 } from "@/lib/validation/service";
 import { assertCan } from "@/server/auth/guard";
@@ -27,18 +29,18 @@ import * as repo from "@/server/repositories/service.repository";
 // Prerendered into the static shell and kept until an admin change expires
 // the tag (or a day passes as a safety net).
 
-export async function getPublishedServices(): Promise<ServiceSummary[]> {
+export async function getPublishedServices(locale: Locale = "en"): Promise<ServiceSummary[]> {
   "use cache";
   cacheTag(TAGS.services);
   cacheLife("days");
-  return repo.listPublished();
+  return repo.listPublished(locale);
 }
 
-export async function getPublishedService(slug: string): Promise<Service | null> {
+export async function getPublishedService(slug: string, locale: Locale = "en"): Promise<Service | null> {
   "use cache";
   cacheTag(TAGS.services, TAGS.service(slug));
   cacheLife("days");
-  return repo.findPublishedBySlug(slug);
+  return repo.findPublishedBySlug(slug, locale);
 }
 
 export async function getServiceRedirect(oldSlug: string): Promise<string | null> {
@@ -156,4 +158,67 @@ export async function deleteService(actor: Actor, id: number, ctx: Ctx = {}): Pr
     );
   });
   invalidateServices(current.slug);
+}
+
+// ── Translations (admin) ─────────────────────────────────────────────────
+
+export type ServiceTranslation = {
+  title: string; eyebrow: string; summary: string; body: string; heroImageAlt: string;
+  features: ServiceItem[]; processSteps: ServiceItem[]; faqs: ServiceFaq[];
+  ctaLabel: string; priceFrom: string; seoTitle: string; seoDescription: string;
+  updatedAt: string | null;
+};
+
+const parseArr = <T,>(raw: string | null): T[] => {
+  try {
+    const v = JSON.parse(raw ?? "[]");
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+};
+
+function assertTranslatable(locale: string): asserts locale is Locale {
+  if (!isLocale(locale) || locale === "en") throw notFound("Unknown language");
+}
+
+export async function getServiceTranslation(actor: Actor, id: number, locale: string): Promise<ServiceTranslation> {
+  assertCan(actor, "services:read");
+  assertTranslatable(locale);
+  const t = await repo.findTranslation(id, locale);
+  return {
+    title: t?.title ?? "", eyebrow: t?.eyebrow ?? "", summary: t?.summary ?? "", body: t?.body ?? "",
+    heroImageAlt: t?.hero_image_alt ?? "",
+    features: parseArr<ServiceItem>(t?.features ?? null), processSteps: parseArr<ServiceItem>(t?.process_steps ?? null),
+    faqs: parseArr<ServiceFaq>(t?.faqs ?? null),
+    ctaLabel: t?.cta_label ?? "", priceFrom: t?.price_from ?? "", seoTitle: t?.seo_title ?? "", seoDescription: t?.seo_description ?? "",
+    updatedAt: t ? new Date(t.updated_at).toISOString() : null,
+  };
+}
+
+export async function saveServiceTranslation(actor: Actor, id: number, locale: string, raw: unknown, ctx: Ctx = {}) {
+  assertCan(actor, "services:update");
+  assertTranslatable(locale);
+  const input = parse(translationInput, raw);
+  const service = await repo.findById(id);
+  if (!service) throw notFound("Service not found");
+  await transaction(async (db) => {
+    const n = (v: string | null | undefined) => v ?? null;
+    await repo.upsertTranslation(
+      id,
+      locale,
+      {
+        title: n(input.title), eyebrow: n(input.eyebrow), summary: n(input.summary), body: n(input.body),
+        heroImageAlt: n(input.heroImageAlt), features: input.features, processSteps: input.processSteps, faqs: input.faqs,
+        ctaLabel: n(input.ctaLabel), priceFrom: n(input.priceFrom), seoTitle: n(input.seoTitle), seoDescription: n(input.seoDescription),
+      },
+      actor.id,
+      db,
+    );
+    await audit.insert(
+      { userId: actor.id, action: "service.translate", entityType: "service", entityId: id, summary: `Updated ${locale.toUpperCase()} translation of “${service.title}”`, ip: ctx.ip },
+      db,
+    );
+  });
+  invalidateServices(service.slug);
 }

@@ -64,6 +64,9 @@ const nextConfig: NextConfig = {
 
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    // The site has two root layouts (app/[lang] and app/admin), so unmatched
+    // URLs get app/global-not-found.tsx.
+    globalNotFound: true,
   },
 
   async headers() {

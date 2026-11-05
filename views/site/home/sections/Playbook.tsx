@@ -1,9 +1,11 @@
 import Accordion from "@/components/site/Accordion";
 import PlaybookBackdrop from "@/components/site/PlaybookBackdrop";
 import { Accent, Container, Eyebrow, Lede, SectionHeading } from "@/components/site/ui";
-import { playbook } from "@/content/site";
+import { getContent } from "@/content";
 
-export default function Playbook() {
+export default async function Playbook() {
+  const { home, playbook } = await getContent();
+  const c = home.playbook;
   return (
     <section
       id="playbook"
@@ -24,13 +26,12 @@ export default function Playbook() {
 
       <Container className="relative flex flex-col gap-[clamp(64px,7vw,100px)]">
         <div className="flex max-w-[760px] flex-col gap-[22px]">
-          <Eyebrow index="04">The playbook</Eyebrow>
+          <Eyebrow index="04">{c.eyebrow}</Eyebrow>
           <SectionHeading>
-            How each channel <Accent>earns its keep.</Accent>
+            {c.heading[0]}<Accent>{c.heading[1]}</Accent>
           </SectionHeading>
           <Lede>
-            No black boxes. This is the work, in depth — what we do, why it compounds, and how it is
-            measured.
+            {c.lede}
           </Lede>
         </div>
 

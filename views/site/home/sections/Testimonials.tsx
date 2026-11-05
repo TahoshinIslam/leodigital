@@ -1,8 +1,10 @@
 import Reveal from "@/components/site/anim/Reveal";
 import { Accent, Container, Eyebrow, SectionHeading } from "@/components/site/ui";
-import { testimonials } from "@/content/site";
+import { getContent } from "@/content";
 
-export default function Testimonials() {
+export default async function Testimonials() {
+  const { home, testimonials } = await getContent();
+  const c = home.testimonials;
   return (
     <section
       id="testimonials"
@@ -10,9 +12,9 @@ export default function Testimonials() {
     >
       <Container>
         <div className="flex max-w-[760px] flex-col gap-[22px]">
-          <Eyebrow index="07">Client words</Eyebrow>
+          <Eyebrow index="07">{c.eyebrow}</Eyebrow>
           <SectionHeading>
-            They said it <Accent>better.</Accent>
+            {c.heading[0]}<Accent>{c.heading[1]}</Accent>
           </SectionHeading>
         </div>
 

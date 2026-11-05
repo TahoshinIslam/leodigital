@@ -1,4 +1,5 @@
 import IdleEnhancements from "@/components/site/IdleEnhancements";
+import { getLocale } from "@/content";
 import { getPublishedServices } from "@/server/modules/services";
 import BrandWeb from "@/views/site/home/sections/BrandWeb";
 import Contact from "@/views/site/home/sections/Contact";
@@ -18,7 +19,7 @@ import Why from "@/views/site/home/sections/Why";
  * detail pages never download Lenis at all.
  */
 export default async function HomeView() {
-  const services = await getPublishedServices();
+  const services = await getPublishedServices(await getLocale());
   return (
     <>
       <IdleEnhancements />

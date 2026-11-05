@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { contact, industries } from "@/content/site";
-import type { NavService } from "@/components/site/nav/types";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import LanguageSwitcher from "@/components/site/LanguageSwitcher";
+import type { NavCopy, NavService } from "@/components/site/nav/types";
+import { localePath } from "@/lib/i18n/config";
 
 /**
  * Full-screen navigation for small screens.
@@ -26,20 +27,23 @@ type RootItem =
   | { kind: "link"; label: string; href: string; preview: string }
   | { kind: "level"; label: string; level: Exclude<Level, "root">; preview: string };
 
-const ROOT: RootItem[] = [
-  { kind: "link", label: "Home", href: "/", preview: "Marketing that creates market leaders." },
-  { kind: "level", label: "Services", level: "services", preview: "Every channel. One number that matters." },
-  { kind: "level", label: "Industries", level: "industries", preview: "Built for the way your customers buy." },
-  { kind: "link", label: "Playbook", href: "/#playbook", preview: "How we plan, launch and optimise." },
-  { kind: "link", label: "Studio", href: "/#studio", preview: "Product stills, films and explainers." },
-  { kind: "link", label: "Pricing", href: "/#pricing", preview: "Plans that scale with you." },
-  { kind: "link", label: "Contact", href: "/#contact", preview: "Talk to a strategist this week." },
-];
+function rootItems(copy: NavCopy): RootItem[] {
+  const L = (p: string) => localePath(copy.locale, p);
+  const label = (key: string) => copy.links.find((l) => l.key === key)?.label ?? key;
+  const p = copy.menu.previews;
+  return [
+    { kind: "link", label: copy.nav.home, href: L("/"), preview: p.home },
+    { kind: "level", label: label("services"), level: "services", preview: p.services },
+    { kind: "level", label: label("industries"), level: "industries", preview: p.industries },
+    { kind: "link", label: label("playbook"), href: L("/#playbook"), preview: p.playbook },
+    { kind: "link", label: label("studio"), href: L("/#studio"), preview: p.studio },
+    { kind: "link", label: label("pricing"), href: L("/#pricing"), preview: p.pricing },
+    { kind: "link", label: label("contact"), href: L("/#contact"), preview: p.contact },
+  ];
+}
 
-const LEVEL_TITLE: Record<Exclude<Level, "root">, string> = { services: "Services", industries: "Industries" };
 
 type Preview = { title: string; caption: string; image?: string | null; alt?: string | null };
-const DEFAULT_PREVIEW: Preview = { title: "leotech.", caption: "Marketing that creates market leaders." };
 
 const MOTION_KEY = "leotech:motion";
 const MOTION_EVENT = "leotech:motion-change";
@@ -70,12 +74,19 @@ export default function MenuOverlay({
   onClose,
   services,
   pathname,
+  copy,
 }: {
   open: boolean;
   onClose: () => void;
   services: NavService[];
   pathname: string;
+  copy: NavCopy;
 }) {
+  const defaultCaption = copy.menu.defaultCaption;
+  const DEFAULT_PREVIEW = useMemo<Preview>(() => ({ title: "leotech.", caption: defaultCaption }), [defaultCaption]);
+  const ROOT = rootItems(copy);
+  const LEVEL_TITLE: Record<Exclude<Level, "root">, string> = { services: ROOT[1].label, industries: ROOT[2].label };
+  const L = (p: string) => localePath(copy.locale, p);
   const [level, setLevel] = useState<Level>("root");
   const [preview, setPreview] = useState<Preview>(DEFAULT_PREVIEW);
   const motionOff = useSyncExternalStore(motionStore.subscribe, motionStore.get, motionStore.server);
@@ -84,13 +95,13 @@ export default function MenuOverlay({
   const lastTrigger = useRef<HTMLElement | null>(null);
 
   // Close, then quietly reset to the root level once the fade-out has finished.
-  const close = useCallback(() => {
+  const close = () => {
     onClose();
     window.setTimeout(() => {
       setLevel("root");
       setPreview(DEFAULT_PREVIEW);
     }, 500);
-  }, [onClose]);
+  };
 
   // Scroll lock + initial focus while open.
   useEffect(() => {
@@ -114,11 +125,11 @@ export default function MenuOverlay({
     el?.focus();
   }, [level, open]);
 
-  const goTo = useCallback((next: Level, trigger?: HTMLElement | null) => {
+  const goTo = (next: Level, trigger?: HTMLElement | null) => {
     if (trigger) lastTrigger.current = trigger;
     setLevel(next);
     setPreview(DEFAULT_PREVIEW);
-  }, []);
+  };
 
   const back = useCallback(() => {
     setLevel("root");
@@ -169,13 +180,13 @@ export default function MenuOverlay({
     return name === "root" ? "-translate-x-10 opacity-0 pointer-events-none" : "translate-x-10 opacity-0 pointer-events-none";
   };
 
-  const isCurrent = (href: string) => (href === "/" ? pathname === "/" : false);
+  const isCurrent = (href: string) => href === L("/") && pathname === "/";
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Site menu"
+      aria-label={copy.menu.dialog}
       aria-hidden={!open}
       inert={!open}
       onKeyDown={onKeyDown}
@@ -205,7 +216,7 @@ export default function MenuOverlay({
         ) : null}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,10,10,0.1),rgba(4,10,10,0.75))]" />
         <div className="absolute inset-0 flex flex-col justify-between p-[clamp(28px,4vw,56px)]">
-          <span className="font-mono text-xs tracking-[0.2em] text-white/50 uppercase">Leotech · Dhaka</span>
+          <span className="font-mono text-xs tracking-[0.2em] text-white/50 uppercase">{copy.menu.city}</span>
           <div key={preview.title} className="animate-[menu-fade_.45s_ease-out]">
             <div className="font-[family-name:var(--font-oswald)] text-[clamp(48px,6.2vw,128px)] leading-[0.92] font-semibold tracking-[-0.01em] text-balance text-white uppercase [overflow-wrap:anywhere]">
               {preview.title}
@@ -214,15 +225,15 @@ export default function MenuOverlay({
           </div>
           <div className="flex items-end justify-between gap-6">
             <Link
-              href="/#contact"
+              href={L("/#contact")}
               onClick={close}
               tabIndex={-1}
               className="rounded-full bg-accent px-7 py-3.5 font-body text-[15px] font-bold whitespace-nowrap text-ink no-underline shadow-[0_10px_34px_rgba(73,220,122,0.35)]"
             >
-              Book a free consultation
+              {copy.menu.book}
             </Link>
             <span className="text-right font-mono text-xs leading-relaxed tracking-[0.14em] text-white/55 uppercase">
-              {contact.email}
+              {copy.email}
             </span>
           </div>
         </div>
@@ -244,7 +255,7 @@ export default function MenuOverlay({
                 leotech<span className="text-accent">.</span>
               </span>
               <span aria-hidden className="h-6 w-px bg-white/25" />
-              <span className="truncate font-body text-[16px] font-semibold text-white/75">Digital marketing</span>
+              <span className="truncate font-body text-[16px] font-semibold text-white/75">{copy.menu.tagline}</span>
             </div>
             <div className={`absolute inset-0 flex items-center gap-4 transition-all duration-300 ${level !== "root" ? "opacity-100" : "pointer-events-none translate-x-3 opacity-0"}`}>
               <button
@@ -253,7 +264,7 @@ export default function MenuOverlay({
                 tabIndex={level === "root" ? -1 : 0}
                 className="inline-flex items-center gap-2 rounded-full py-1 font-body text-[16px] font-semibold text-accent"
               >
-                <Chevron dir="left" size={20} /> Back
+                <Chevron dir="left" size={20} /> {copy.menu.back}
               </button>
               <span aria-hidden className="h-6 w-px bg-white/25" />
               <span className="truncate font-body text-[16px] font-semibold text-white/80">
@@ -265,7 +276,7 @@ export default function MenuOverlay({
             ref={closeRef}
             type="button"
             onClick={close}
-            aria-label="Close menu"
+            aria-label={copy.nav.closeMenu}
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/8 text-white transition-colors hover:bg-accent hover:text-ink"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden>
@@ -279,7 +290,7 @@ export default function MenuOverlay({
           {/* Root */}
           <nav
             data-level="root"
-            aria-label="Main"
+            aria-label={copy.nav.primary}
             inert={level !== "root"}
             className={`absolute inset-0 overflow-y-auto px-6 pt-6 pb-8 transition-all duration-500 ease-luxe sm:px-10 ${levelClass("root")}`}
           >
@@ -330,18 +341,18 @@ export default function MenuOverlay({
             className={`absolute inset-0 overflow-y-auto px-6 pt-4 pb-8 transition-all duration-500 ease-luxe sm:px-10 ${levelClass("services")}`}
           >
             <Link
-              href="/services"
+              href={L("/services")}
               onClick={close}
               data-autofocus=""
               className="mb-5 inline-flex items-center gap-2 font-[family-name:var(--font-oswald)] text-[28px] font-semibold tracking-[0.01em] text-[#9fe3b8] uppercase no-underline hover:text-white"
             >
-              Explore all <Chevron size={22} />
+              {copy.menu.exploreAll} <Chevron size={22} />
             </Link>
             <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 min-[460px]:grid-cols-2">
               {services.map((s, i) => (
                 <li key={s.slug}>
                   <Link
-                    href={`/services/${s.slug}`}
+                    href={L(`/services/${s.slug}`)}
                     onClick={close}
                     onMouseEnter={() => setPreview({ title: s.title, caption: s.eyebrow ?? "", image: s.heroImage, alt: s.heroImageAlt })}
                     onFocus={() => setPreview({ title: s.title, caption: s.eyebrow ?? "", image: s.heroImage, alt: s.heroImageAlt })}
@@ -380,10 +391,10 @@ export default function MenuOverlay({
             className={`absolute inset-0 overflow-y-auto px-6 pt-4 pb-8 transition-all duration-500 ease-luxe sm:px-10 ${levelClass("industries")}`}
           >
             <ul className="m-0 flex list-none flex-col p-0">
-              {industries.map((ind, i) => (
+              {copy.industries.map((ind, i) => (
                 <li key={ind.title}>
                   <Link
-                    href="/#industries"
+                    href={L("/#industries")}
                     onClick={close}
                     data-autofocus={i === 0 ? "" : undefined}
                     onMouseEnter={() => setPreview({ title: ind.title, caption: ind.copy })}
@@ -399,23 +410,24 @@ export default function MenuOverlay({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-4 border-t border-white/8 px-6 py-5 sm:px-10">
+        <div className="flex items-center justify-between gap-3 border-t border-white/8 px-6 py-5 sm:px-10">
           <a
-            href={`tel:${contact.phones[0].replace(/\s/g, "")}`}
+            href={`tel:${copy.phone.replace(/\s/g, "")}`}
             className="inline-flex items-center gap-2.5 font-body text-[15px] font-semibold text-white/85 no-underline hover:text-accent"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
-            {contact.phones[0]}
+            <span className="hidden min-[440px]:inline">{copy.phone}</span>
           </a>
+          <LanguageSwitcher inline locale={copy.locale} label={copy.language.label} />
           <button
             type="button"
             onClick={toggleMotion}
             aria-pressed={!motionOff}
             className="inline-flex items-center gap-2 rounded-full px-1 py-1 font-body text-[15px] font-semibold text-white/85 hover:text-accent"
           >
-            Motion <span className="font-mono text-xs tracking-[0.12em] text-white/50 uppercase">{motionOff ? "off" : "on"}</span>
+            {copy.menu.motion} <span className="font-mono text-xs tracking-[0.12em] text-white/50 uppercase">{motionOff ? copy.menu.off : copy.menu.on}</span>
             <span aria-hidden className={`relative inline-block h-5 w-9 rounded-full transition-colors ${motionOff ? "bg-white/15" : "bg-accent"}`}>
               <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${motionOff ? "left-0.5" : "left-[18px]"}`} />
             </span>

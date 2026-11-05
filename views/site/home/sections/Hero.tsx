@@ -1,9 +1,11 @@
 import CountUp from "@/components/site/anim/CountUp";
 import HeroBackdrop from "@/components/site/HeroBackdrop";
 import { Accent, Container, GhostButton, PrimaryButton } from "@/components/site/ui";
-import { stats } from "@/content/site";
+import { getContent } from "@/content";
 
-export default function Hero() {
+export default async function Hero() {
+  const { home, stats } = await getContent();
+  const c = home.hero;
   return (
     <section className="relative -mt-[74px] overflow-hidden bg-ink pt-[74px]">
       {/* Hyperspeed road backdrop. Fills the hero; the component gates itself to
@@ -26,7 +28,7 @@ export default function Hero() {
         aria-hidden
         className="pointer-events-none absolute top-[30px] left-1/2 z-[1] hidden -translate-x-1/2 text-[clamp(170px,22vw,320px)] leading-none font-semibold tracking-[-0.04em] whitespace-nowrap text-white/3 select-none md:block"
       >
-        growth
+        {c.watermark}
       </div>
 
       <Container className="relative z-10">
@@ -43,33 +45,32 @@ export default function Hero() {
                   style={{ background: "linear-gradient(90deg, #49DC7A, rgba(73,220,122,0.15))" }}
                 />
                 <span className="font-mono text-[12.5px] tracking-[0.16em] text-white/75 uppercase">
-                  Digital marketing agency · Dhaka
+                  {c.eyebrow}
                 </span>
               </div>
             </div>
 
             <h1 className="m-0 max-w-[16ch] text-[clamp(60px,8.4vw,132px)] leading-[0.9] font-medium tracking-[-0.052em] text-white">
               <span className="hero-line">
-                <span>Marketing that creates</span>
+                <span>{c.title[0]}</span>
               </span>{" "}
               <span className="hero-line">
                 <span className="[animation-delay:110ms]">
-                  <Accent>market leaders.</Accent>
+                  <Accent>{c.title[1]}</Accent>
                 </span>
               </span>
             </h1>
 
             <div className="hero-fade [animation-delay:420ms]">
               <p className="m-0 max-w-[540px] font-body text-lg leading-relaxed text-white/65">
-                Leotech is the digital marketing partner behind Bangladesh&rsquo;s ambitious brands. SEO,
-                performance media, content, and web experiences — engineered to compound.
+                {c.lede}
               </p>
             </div>
 
             <div className="hero-fade [animation-delay:540ms]">
               <div className="flex flex-wrap items-center gap-4">
-                <PrimaryButton href="#contact">Book a free consultation</PrimaryButton>
-                <GhostButton href="#services">View services</GhostButton>
+                <PrimaryButton href="#contact">{c.primary}</PrimaryButton>
+                <GhostButton href="#services">{c.secondary}</GhostButton>
               </div>
             </div>
           </div>
@@ -78,7 +79,7 @@ export default function Hero() {
         <div className="flex justify-center pt-1 pb-[26px]">
           <div className="animate-scroll-cue flex flex-col items-center gap-2">
             <span className="font-mono text-[10.5px] tracking-[0.24em] text-white/40 uppercase">
-              Scroll to explore
+              {c.scroll}
             </span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#49DC7A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M12 5v14" />

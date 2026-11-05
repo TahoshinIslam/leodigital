@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useId, useState } from "react";
 import Reveal from "@/components/site/anim/Reveal";
-import { annualDiscount, pricing, type BillingPeriod, type PricingTier } from "@/content/site";
+import type { BillingPeriod, PricingTier } from "@/content/site";
 
 function Check({ filled }: { filled: boolean }) {
   return (
@@ -25,20 +25,24 @@ function Check({ filled }: { filled: boolean }) {
 function BillingToggle({
   period,
   onChange,
+  labels,
+  discount,
 }: {
   period: BillingPeriod;
   onChange: (p: BillingPeriod) => void;
+  labels: Labels;
+  discount: string;
 }) {
   const name = useId();
   const options: { value: BillingPeriod; label: string }[] = [
-    { value: "monthly", label: "Monthly" },
-    { value: "annual", label: "Annual" },
+    { value: "monthly", label: labels.monthly },
+    { value: "annual", label: labels.annual },
   ];
 
   return (
     <div
       role="radiogroup"
-      aria-label="Billing period"
+      aria-label={labels.period}
       className="inline-flex items-center gap-1 rounded-full border border-white/12 bg-ink-card p-[5px]"
     >
       {options.map((o) => {
@@ -64,7 +68,7 @@ function BillingToggle({
                   active ? "bg-ink/15 text-ink" : "bg-accent/12 text-accent"
                 }`}
               >
-                {annualDiscount}
+                {discount}
               </span>
             )}
           </button>
@@ -171,17 +175,19 @@ function PriceCard({
   );
 }
 
-export default function PricingPlans() {
+type Labels = { monthly: string; annual: string; period: string };
+
+export default function PricingPlans({ tiers, discount, labels }: { tiers: PricingTier[]; discount: string; labels: Labels }) {
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
 
   return (
     <>
       <div className="mt-10 flex justify-center md:mt-12">
-        <BillingToggle period={period} onChange={setPeriod} />
+        <BillingToggle period={period} onChange={setPeriod} labels={labels} discount={discount} />
       </div>
 
       <Reveal stagger={0.08} className="mt-12 grid items-stretch gap-[18px] md:grid-cols-3">
-        {pricing.map((tier, i) => (
+        {tiers.map((tier, i) => (
           <PriceCard key={tier.name} tier={tier} index={i} period={period} />
         ))}
       </Reveal>

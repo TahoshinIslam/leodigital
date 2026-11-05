@@ -1,6 +1,7 @@
 import { ArrowLeft, Trash2 } from "lucide-react";
 import AccessDenied from "@/components/admin/AccessDenied";
 import InlineAction from "@/components/admin/InlineAction";
+import LanguageTabs from "@/components/admin/LanguageTabs";
 import { ButtonLink, PageHeader } from "@/components/admin/ui";
 import { can } from "@/lib/auth/permissions";
 import { siteUrl } from "@/lib/site-url";
@@ -48,6 +49,7 @@ export default async function ServiceEditorView({ user, id, saved }: { user: Ses
           ) : undefined
         }
       />
+      {service ? <LanguageTabs id={service.id} active="en" /> : null}
       {saved ? (
         <div role="status" className="rounded-xl border border-a-em/25 bg-a-em/8 px-4 py-3 text-[13px] font-medium text-a-em">Service created.</div>
       ) : null}

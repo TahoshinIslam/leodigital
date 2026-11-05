@@ -1,5 +1,5 @@
 // Creates the database (if missing), applies database/schema.sql and seeds
-// the first super admin plus the starter services.
+// the first super admin plus the starter services (English + Bangla).
 //
 //   npm run db:setup            # schema + seed (idempotent)
 //   npm run db:setup -- --fresh # drop every table first (destroys data)
@@ -39,7 +39,7 @@ try {
   if (process.argv.includes("--fresh")) {
     console.log("! --fresh: dropping existing tables");
     await conn.query(`SET FOREIGN_KEY_CHECKS=0;
-      DROP TABLE IF EXISTS audit_logs, media, service_slug_history, services, sessions, users;
+      DROP TABLE IF EXISTS audit_logs, media, service_translations, service_slug_history, services, sessions, users;
       SET FOREIGN_KEY_CHECKS=1;`);
   }
 
@@ -83,6 +83,26 @@ try {
     added += res.affectedRows;
   }
   console.log(`✓ services seeded (${added} new, ${services.length - added} already present)`);
+
+  // ── Bangla translations of the starter services ──────────────────────
+  const bn = JSON.parse(await readFile(path.join(root, "database/seed/services.bn.json"), "utf8"));
+  let translated = 0;
+  for (const t of bn) {
+    const [rows] = await conn.execute("SELECT id FROM services WHERE slug = ?", [t.slug]);
+    if (!rows.length) continue;
+    const [res] = await conn.execute(
+      `INSERT IGNORE INTO service_translations
+        (service_id, locale, title, eyebrow, summary, body, features, process_steps, faqs, cta_label, seo_title, seo_description, updated_by)
+       VALUES (?, 'bn', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        rows[0].id, t.title, t.eyebrow, t.summary, t.body,
+        JSON.stringify(t.features), JSON.stringify(t.process_steps), JSON.stringify(t.faqs),
+        t.cta_label, t.seo_title, t.seo_description, adminId,
+      ],
+    );
+    translated += res.affectedRows;
+  }
+  console.log(`✓ Bangla translations seeded (${translated} new)`);
 } finally {
   await conn.end();
 }

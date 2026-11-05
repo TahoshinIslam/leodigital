@@ -2,17 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 
 // The full-screen menu is code-split and mounted on first open only, so no
 // visitor pays to download or hydrate it until they tap the hamburger.
 const MenuOverlay = dynamic(() => import("@/components/site/nav/MenuOverlay"), { ssr: false });
-import type { NavService } from "@/components/site/nav/types";
-import { navLinks } from "@/content/site";
+import LanguageSwitcher from "@/components/site/LanguageSwitcher";
+import type { NavCopy, NavService } from "@/components/site/nav/types";
+import { localePath, splitLocale } from "@/lib/i18n/config";
 
-export default function Nav({ services }: { services: NavService[] }) {
-  const pathname = usePathname();
+export default function Nav({ services, copy }: { services: NavService[]; copy: NavCopy }) {
+  const rawPath = usePathname();
+  // Locale-free path, so the same checks work on /services and /bn/services.
+  const pathname = splitLocale(rawPath).path;
+  const navLinks = copy.links;
+  const L = (p: string) => localePath(copy.locale, p);
   const [active, setActive] = useState<string>("");
   const [open, setOpen] = useState(false);
   const [menuLoaded, setMenuLoaded] = useState(false);
@@ -52,7 +57,7 @@ export default function Nav({ services }: { services: NavService[] }) {
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [onHome]);
+  }, [onHome, navLinks]);
 
   // Close the menu once the viewport is wide enough to show the inline links.
   useEffect(() => {
@@ -62,24 +67,21 @@ export default function Nav({ services }: { services: NavService[] }) {
     return () => mql.removeEventListener("change", onChange);
   }, []);
 
-  const close = useCallback(() => {
+  const close = () => {
     setOpen(false);
     window.setTimeout(() => burgerRef.current?.focus(), 30);
-  }, []);
-
-  const isActive = (href: string) => {
-    if (href.startsWith("/#")) return onHome && active === href;
-    return pathname.startsWith(href);
   };
+
+  const isActive = (href: string) => onHome && active === href;
   const servicesActive = pathname.startsWith("/services");
 
   return (
     <>
-      <nav aria-label="Primary" className="sticky top-0 z-60 py-4">
+      <nav aria-label={copy.nav.primary} className="sticky top-0 z-60 py-4">
         <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-5 px-6 md:px-8">
           <Link
-            href="/"
-            aria-label="Leotech home"
+            href={L("/")}
+            aria-label={copy.nav.homeLabel}
             className="flex items-center gap-3 rounded-full border border-white/12 bg-[rgba(9,19,18,0.6)] py-[9px] pr-5 pl-3 no-underline backdrop-blur-[16px]"
           >
             <span className="text-xl leading-none font-bold tracking-[-0.02em] text-white">
@@ -89,11 +91,11 @@ export default function Nav({ services }: { services: NavService[] }) {
 
           <div className="hidden items-center gap-1 rounded-full border border-white/12 bg-[rgba(9,19,18,0.6)] p-[5px] backdrop-blur-[16px] lg:flex">
             {navLinks.map((l) => {
-              const on = l.label === "Services" ? servicesActive || isActive(l.href) : isActive(l.href);
+              const on = l.key === "services" ? servicesActive || isActive(l.href) : isActive(l.href);
               return (
                 <Link
                   key={l.href}
-                  href={l.label === "Services" ? "/services" : l.href}
+                  href={l.key === "services" ? L("/services") : l.href}
                   aria-current={on ? "page" : undefined}
                   className={`rounded-full px-[17px] py-[9px] text-[14.5px] font-medium no-underline transition-all duration-300 hover:bg-white/7 hover:text-white ${
                     on ? "bg-accent/12 text-white" : "text-white/70"
@@ -103,21 +105,23 @@ export default function Nav({ services }: { services: NavService[] }) {
                 </Link>
               );
             })}
+
+            <LanguageSwitcher bare locale={copy.locale} label={copy.language.label} />
           </div>
 
           <div className="flex items-center gap-3">
             <Link
-              href="/#contact"
+              href={L("/#contact")}
               className="hidden items-center gap-2 rounded-full bg-accent px-6 py-3 font-body text-[14.5px] font-bold text-ink no-underline shadow-[0_8px_28px_rgba(73,220,122,0.35),inset_0_1px_0_rgba(255,255,255,0.4)] transition-all duration-[350ms] ease-luxe hover:-translate-y-0.5 hover:shadow-[0_14px_40px_rgba(73,220,122,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] sm:inline-flex"
             >
-              Get started
+              {copy.nav.getStarted}
             </Link>
 
             {/* Hamburger — below the inline-links breakpoint. */}
             <button
               ref={burgerRef}
               type="button"
-              aria-label="Open menu"
+              aria-label={copy.nav.openMenu}
               aria-expanded={open}
               aria-haspopup="dialog"
               onClick={() => {
@@ -139,7 +143,7 @@ export default function Nav({ services }: { services: NavService[] }) {
         </div>
       </nav>
 
-      {menuLoaded ? <MenuOverlay open={open} onClose={close} services={services} pathname={pathname} /> : null}
+      {menuLoaded ? <MenuOverlay open={open} onClose={close} services={services} pathname={pathname} copy={copy} /> : null}
     </>
   );
 }

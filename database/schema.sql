@@ -102,3 +102,28 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   KEY idx_audit_created (created_at),
   CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Per-language overrides for a service (currently: bn). Every column is
+-- optional; an empty one falls back to the English value on the services row.
+-- Slug, images, status and ordering are shared across languages.
+CREATE TABLE IF NOT EXISTS service_translations (
+  service_id       INT UNSIGNED NOT NULL,
+  locale           VARCHAR(10) NOT NULL,
+  title            VARCHAR(160) NULL,
+  eyebrow          VARCHAR(120) NULL,
+  summary          VARCHAR(500) NULL,
+  body             MEDIUMTEXT NULL,
+  hero_image_alt   VARCHAR(250) NULL,
+  features         LONGTEXT NULL,
+  process_steps    LONGTEXT NULL,
+  faqs             LONGTEXT NULL,
+  cta_label        VARCHAR(80) NULL,
+  price_from       VARCHAR(80) NULL,
+  seo_title        VARCHAR(70) NULL,
+  seo_description  VARCHAR(170) NULL,
+  updated_by       INT UNSIGNED NULL,
+  updated_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (service_id, locale),
+  CONSTRAINT fk_translations_service FOREIGN KEY (service_id) REFERENCES services (id) ON DELETE CASCADE,
+  CONSTRAINT fk_translations_user FOREIGN KEY (updated_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

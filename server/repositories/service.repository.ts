@@ -70,16 +70,42 @@ function toDbValue(key: keyof ServiceInput, value: unknown) {
 }
 
 // ── Public reads ─────────────────────────────────────────────────────────
+// For a non-default locale the translation row is LEFT JOINed and each text
+// field falls back to English when the translation is missing or empty.
 
-export async function listPublished(): Promise<ServiceSummary[]> {
+const T = (col: string, json = false) =>
+  json
+    ? `COALESCE(NULLIF(NULLIF(t.${col}, ''), '[]'), s.${col}) AS ${col}`
+    : `COALESCE(NULLIF(t.${col}, ''), s.${col}) AS ${col}`;
+
+const LOCALIZED_COLS = [
+  "s.id", "s.slug", T("title"), T("eyebrow"), T("summary"), T("body"), "s.hero_image", T("hero_image_alt"),
+  T("features", true), T("process_steps", true), T("faqs", true), T("cta_label"), T("price_from"),
+  T("seo_title"), T("seo_description"), "s.og_image", "s.canonical_url", "s.noindex", "s.status",
+  "s.published_at", "s.sort_order", "s.created_at", "s.updated_at",
+].join(", ");
+
+function localizedFrom(locale: string) {
+  return locale === "en"
+    ? { cols: "s.*", join: "", params: [] as string[] }
+    : { cols: LOCALIZED_COLS, join: "LEFT JOIN service_translations t ON t.service_id = s.id AND t.locale = ?", params: [locale] };
+}
+
+export async function listPublished(locale = "en"): Promise<ServiceSummary[]> {
+  const q = localizedFrom(locale);
   const rows = await sql<Row>(
-    `SELECT ${SUMMARY_COLS} FROM services WHERE status = 'published' ORDER BY sort_order ASC, title ASC`,
+    `SELECT ${q.cols} FROM services s ${q.join} WHERE s.status = 'published' ORDER BY s.sort_order ASC, s.title ASC`,
+    q.params,
   );
   return rows.map(toSummary);
 }
 
-export async function findPublishedBySlug(slug: string): Promise<Service | null> {
-  const r = await sqlOne<Row>("SELECT * FROM services WHERE slug = ? AND status = 'published'", [slug]);
+export async function findPublishedBySlug(slug: string, locale = "en"): Promise<Service | null> {
+  const q = localizedFrom(locale);
+  const r = await sqlOne<Row>(
+    `SELECT ${q.cols} FROM services s ${q.join} WHERE s.slug = ? AND s.status = 'published'`,
+    [...q.params, slug],
+  );
   return r ? toService(r) : null;
 }
 
@@ -208,4 +234,57 @@ export async function contentGaps(): Promise<{ missingSeo: number; missingImage:
      FROM services WHERE status = 'published'`,
   );
   return { missingSeo: Number(r?.missing_seo ?? 0), missingImage: Number(r?.missing_image ?? 0), missingFaq: Number(r?.missing_faq ?? 0) };
+}
+
+
+// ── Translations ─────────────────────────────────────────────────────────
+
+export type TranslationRow = {
+  title: string | null; eyebrow: string | null; summary: string | null; body: string | null;
+  hero_image_alt: string | null; features: string | null; process_steps: string | null; faqs: string | null;
+  cta_label: string | null; price_from: string | null; seo_title: string | null; seo_description: string | null;
+  updated_at: Date;
+};
+
+export async function findTranslation(serviceId: number, locale: string) {
+  return sqlOne<TranslationRow>("SELECT * FROM service_translations WHERE service_id = ? AND locale = ?", [serviceId, locale]);
+}
+
+/** Locales that have a translation row, per service (for the admin list). */
+export async function translatedLocales(): Promise<Map<number, string[]>> {
+  const rows = await sql<{ service_id: number; locale: string }>("SELECT service_id, locale FROM service_translations");
+  const m = new Map<number, string[]>();
+  for (const r of rows) m.set(r.service_id, [...(m.get(r.service_id) ?? []), r.locale]);
+  return m;
+}
+
+export async function upsertTranslation(
+  serviceId: number,
+  locale: string,
+  t: {
+    title: string | null; eyebrow: string | null; summary: string | null; body: string | null; heroImageAlt: string | null;
+    features: unknown[]; processSteps: unknown[]; faqs: unknown[]; ctaLabel: string | null; priceFrom: string | null;
+    seoTitle: string | null; seoDescription: string | null;
+  },
+  userId: number,
+  db: PoolConnection,
+) {
+  const values = [
+    t.title, t.eyebrow, t.summary, t.body, t.heroImageAlt,
+    JSON.stringify(t.features), JSON.stringify(t.processSteps), JSON.stringify(t.faqs),
+    t.ctaLabel, t.priceFrom, t.seoTitle, t.seoDescription, userId,
+  ];
+  await exec(
+    `INSERT INTO service_translations
+       (service_id, locale, title, eyebrow, summary, body, hero_image_alt, features, process_steps, faqs,
+        cta_label, price_from, seo_title, seo_description, updated_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE
+       title = VALUES(title), eyebrow = VALUES(eyebrow), summary = VALUES(summary), body = VALUES(body),
+       hero_image_alt = VALUES(hero_image_alt), features = VALUES(features), process_steps = VALUES(process_steps),
+       faqs = VALUES(faqs), cta_label = VALUES(cta_label), price_from = VALUES(price_from),
+       seo_title = VALUES(seo_title), seo_description = VALUES(seo_description), updated_by = VALUES(updated_by)`,
+    [serviceId, locale, ...values],
+    db,
+  );
 }

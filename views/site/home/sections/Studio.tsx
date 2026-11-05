@@ -1,19 +1,20 @@
 import Reveal from "@/components/site/anim/Reveal";
 import { Accent, Container, Eyebrow, Lede, SectionHeading } from "@/components/site/ui";
-import { studioCards } from "@/content/site";
+import { getContent } from "@/content";
 
-export default function Studio() {
+export default async function Studio() {
+  const { home, studioCards } = await getContent();
+  const c = home.studio;
   return (
     <section id="studio" className="border-t border-white/8 bg-ink py-[clamp(96px,10vw,150px)]">
       <Container>
         <div className="flex max-w-[760px] flex-col gap-[22px]">
-          <Eyebrow index="06">In-house studio</Eyebrow>
+          <Eyebrow index="06">{c.eyebrow}</Eyebrow>
           <SectionHeading>
-            Visuals that sell <Accent>before you speak.</Accent>
+            {c.heading[0]}<Accent>{c.heading[1]}</Accent>
           </SectionHeading>
           <Lede>
-            Our own video studio and editing team — so your product never waits on a third party to look
-            its best.
+            {c.lede}
           </Lede>
         </div>
 

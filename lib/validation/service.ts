@@ -74,3 +74,23 @@ export const listQuery = z.object({
   page: z.coerce.number().int().min(1).max(10_000).default(1),
   perPage: z.coerce.number().int().min(1).max(100).default(20),
 });
+
+/** A translation: every field optional (empty = fall back to English). */
+const optItem = z.object({ title: line(120, 1), description: text(1000).pipe(z.string().min(1, "Required")) });
+const optFaq = z.object({ question: line(200, 1), answer: text(2000).pipe(z.string().min(1, "Required")) });
+
+export const translationInput = z.object({
+  title: optionalLine(160),
+  eyebrow: optionalLine(120),
+  summary: optionalLine(500),
+  body: text(50_000).optional().transform((v) => (v ? v : null)),
+  heroImageAlt: optionalLine(250),
+  features: z.array(optItem).max(24).default([]),
+  processSteps: z.array(optItem).max(12).default([]),
+  faqs: z.array(optFaq).max(30).default([]),
+  ctaLabel: optionalLine(80),
+  priceFrom: optionalLine(80),
+  seoTitle: optionalLine(70),
+  seoDescription: optionalLine(170),
+});
+export type TranslationInput = z.infer<typeof translationInput>;

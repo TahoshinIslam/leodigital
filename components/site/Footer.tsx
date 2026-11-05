@@ -1,23 +1,26 @@
 import Link from "next/link";
 import { Container } from "@/components/site/ui";
 import type { NavService } from "@/components/site/nav/types";
-import { contact, socials } from "@/content/site";
+import { getContent } from "@/content";
+import { localePath } from "@/lib/i18n/config";
 
 // Evaluated when the module loads (build time for the static shell).
 const BUILD_YEAR = new Date().getFullYear();
 
-const company = [
-  { label: "About", href: "/#why" },
-  { label: "Studio", href: "/#studio" },
-  { label: "Clients", href: "/#testimonials" },
-  { label: "Playbook", href: "/#playbook" },
-  { label: "All services", href: "/services" },
-];
-
-export default function Footer({ services }: { services: NavService[] }) {
+export default async function Footer({ services }: { services: NavService[] }) {
+  const { ui, contact, socials, locale } = await getContent();
+  const f = ui.footer;
+  const L = (p: string) => localePath(locale, p);
+  const company = [
+    { label: f.about, href: L("/#why") },
+    { label: f.studio, href: L("/#studio") },
+    { label: f.clients, href: L("/#testimonials") },
+    { label: f.playbook, href: L("/#playbook") },
+    { label: f.allServices, href: L("/services") },
+  ];
   const columns = [
-    { title: "Services", links: services.map((s) => ({ label: s.title, href: `/services/${s.slug}` })) },
-    { title: "Company", links: company },
+    { title: f.services, links: services.map((s) => ({ label: s.title, href: L(`/services/${s.slug}`) })) },
+    { title: f.company, links: company },
   ];
   return (
     <footer className="border-t border-white/8 bg-ink-footer pt-18 pb-10">
@@ -28,7 +31,7 @@ export default function Footer({ services }: { services: NavService[] }) {
               leotech<span className="text-accent">.</span>
             </span>
             <p className="m-0 max-w-[300px] font-body text-[14.5px] leading-[1.65] text-white/50">
-              The digital marketing partner behind Bangladesh&rsquo;s ambitious brands.
+              {f.tagline}
             </p>
           </div>
 
@@ -50,7 +53,7 @@ export default function Footer({ services }: { services: NavService[] }) {
           ))}
 
           <div className="flex flex-col gap-3.5">
-            <span className="font-mono text-[11px] tracking-[0.2em] text-accent/70 uppercase">Contact</span>
+            <span className="font-mono text-[11px] tracking-[0.2em] text-accent/70 uppercase">{f.contact}</span>
             {contact.phones.map((p) => (
               <span key={p} className="font-body text-[14.5px] text-[rgba(212,235,224,0.65)]">
                 {p}
@@ -58,7 +61,7 @@ export default function Footer({ services }: { services: NavService[] }) {
             ))}
             <span className="font-body text-[14.5px] text-[rgba(212,235,224,0.65)]">{contact.email}</span>
             <span className="font-body text-[14.5px] text-[rgba(212,235,224,0.65)]">
-              69/J Panthapath, Dhaka 1216
+              {f.address}
             </span>
           </div>
         </div>

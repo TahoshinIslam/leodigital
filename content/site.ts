@@ -460,12 +460,12 @@ export const pricing: PricingTier[] = [
 ];
 
 export const navLinks = [
-  { href: "/#services", label: "Services" },
-  { href: "/#industries", label: "Industries" },
-  { href: "/#playbook", label: "Playbook" },
-  { href: "/#studio", label: "Studio" },
-  { href: "/#pricing", label: "Pricing" },
-  { href: "/#contact", label: "Contact" },
+  { href: "/#services", key: "services", label: "Services" },
+  { href: "/#industries", key: "industries", label: "Industries" },
+  { href: "/#playbook", key: "playbook", label: "Playbook" },
+  { href: "/#studio", key: "studio", label: "Studio" },
+  { href: "/#pricing", key: "pricing", label: "Pricing" },
+  { href: "/#contact", key: "contact", label: "Contact" },
 ];
 
 export const socials = [
@@ -479,4 +479,172 @@ export const contact = {
   phones: ["01730 594391", "01730 594393"],
   email: "info@leotechbd.com",
   address: ["House 69/J, Panthapath,", "Dhaka 1216"],
+};
+
+// ── Section copy ────────────────────────────────────────────────────────
+// Headings are [plain, accent] pairs: the second half renders in the italic
+// accent style.
+export type Heading = readonly [string, string];
+
+export const home = {
+  hero: {
+    eyebrow: "Digital marketing agency · Dhaka",
+    title: ["Marketing that creates", "market leaders."] as Heading,
+    lede: "Leotech is the digital marketing partner behind Bangladesh’s ambitious brands. SEO, performance media, content, and web experiences — engineered to compound.",
+    primary: "Book a free consultation",
+    secondary: "View services",
+    scroll: "Scroll to explore",
+    watermark: "growth",
+  },
+  why: {
+    eyebrow: "Why digital marketing",
+    heading: ["Visibility is ", "no longer optional."] as Heading,
+    lede: "Today, being found online is not a choice — it is the cost of entry for any business that intends to grow.",
+    paragraphs: [
+      "Your next customer is already searching, scrolling, and comparing — long before they walk through a door or pick up the phone. Digital marketing puts your brand in that moment, at a fraction of what traditional media costs, and with every taka accounted for.",
+      "It is also the only channel that reports back. Every campaign returns data on how customers behave, what they respond to, and where the next opportunity sits. That feedback loop turns marketing from an expense into a compounding asset — and it is why the businesses winning online in Bangladesh treat it as core infrastructure, not decoration.",
+    ],
+  },
+  industries: {
+    eyebrow: "Who we serve",
+    heading: ["Eight industries. One goal: ", "own your niche."] as Heading,
+    lede: "Every market has its own buying journey. We have run it, measured it, and won it — in each of these.",
+  },
+  services: {
+    eyebrow: "What we do",
+    heading: ["Every channel. One number that matters: ", "yours."] as Heading,
+    all: "Explore all services",
+    watermark: "services",
+  },
+  playbook: {
+    eyebrow: "The playbook",
+    heading: ["How each channel ", "earns its keep."] as Heading,
+    lede: "No black boxes. This is the work, in depth — what we do, why it compounds, and how it is measured.",
+  },
+  brand: {
+    eyebrow: "Brand & web",
+    heading: ["Identity, designed ", "to convert."] as Heading,
+    paragraphs: [
+      "Your brand identity is what sets you apart and resonates with your audience — values, mission, personality, and the visual system that carries them. We build it end to end, from the mark on your letterhead to the site that closes the sale.",
+      "Every piece is held to the same standard: does it look like you, and does it move the number.",
+    ],
+  },
+  studio: {
+    eyebrow: "In-house studio",
+    heading: ["Visuals that sell ", "before you speak."] as Heading,
+    lede: "Our own video studio and editing team — so your product never waits on a third party to look its best.",
+  },
+  testimonials: {
+    eyebrow: "Client words",
+    heading: ["They said it ", "better."] as Heading,
+  },
+  pricing: {
+    eyebrow: "Pricing",
+    heading: ["Plans that scale ", "with your ambition."] as Heading,
+    lede: "Transparent retainers — no lock-in, no surprises. Pay monthly, or commit to a year and keep 20%. Start where you are and move up the moment the numbers say so.",
+    footnote: "Every plan starts with a free consultation. Prices in BDT, excluding ad spend and VAT.",
+    monthly: "Monthly",
+    annual: "Annual",
+    period: "Billing period",
+  },
+  cta: {
+    eyebrow: "Partnership",
+    heading: ["Make Leotech your ", "growth partner."] as Heading,
+    paragraphs: [
+      "We are committed to results that speak for themselves. Rigorous tracking, analysis, and optimization keep every engagement aligned with your objectives — more traffic, higher conversion, stronger brand visibility. Outcomes you can point to in a board meeting.",
+      "At the core is client satisfaction: we go beyond the brief to understand your business, exceed expectations, and build partnerships on trust, transparency, and integrity.",
+    ],
+    bandEyebrow: "Free consultation — Saturday to Thursday",
+    bandHeading: ["Your competitors hope ", "you’ll wait."] as Heading,
+    button: "Book a free consultation",
+  },
+  contact: {
+    call: "Call",
+    write: "Write",
+    visit: "Visit",
+    callNote: "We answer Saturday to Thursday, 10:00–18:00.",
+    writeNote: "We reply within 8 hours on business days.",
+    visitNote: "Come see us, Saturday to Thursday, 10:00–18:00.",
+  },
+};
+
+// ── Interface strings ───────────────────────────────────────────────────
+export const ui = {
+  meta: {
+    title: "Leotech — Marketing that creates market leaders",
+    description:
+      "Leotech is the digital marketing partner behind Bangladesh's ambitious brands. SEO, performance media, content, and web experiences — engineered to compound.",
+    servicesTitle: "Digital marketing services",
+    servicesDescription:
+      "SEO, Meta and Google Ads, email, influencer marketing, content, web and online PR — Leotech's digital marketing services for ambitious Bangladeshi brands.",
+    ogLocale: "en_US",
+  },
+  nav: {
+    home: "Home",
+    getStarted: "Get started",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    skip: "Skip to content",
+    homeLabel: "Leotech home",
+    primary: "Primary",
+  },
+  menu: {
+    tagline: "Digital marketing",
+    back: "Back",
+    exploreAll: "Explore all",
+    motion: "Motion",
+    on: "on",
+    off: "off",
+    dialog: "Site menu",
+    book: "Book a free consultation",
+    city: "Leotech · Dhaka",
+    defaultCaption: "Marketing that creates market leaders.",
+    previews: {
+      home: "Marketing that creates market leaders.",
+      services: "Every channel. One number that matters.",
+      industries: "Built for the way your customers buy.",
+      playbook: "How we plan, launch and optimise.",
+      studio: "Product stills, films and explainers.",
+      pricing: "Plans that scale with you.",
+      contact: "Talk to a strategist this week.",
+    },
+  },
+  language: { label: "Select language", name: "English" },
+  footer: {
+    tagline: "The digital marketing partner behind Bangladesh’s ambitious brands.",
+    services: "Services",
+    company: "Company",
+    contact: "Contact",
+    about: "About",
+    studio: "Studio",
+    clients: "Clients",
+    playbook: "Playbook",
+    allServices: "All services",
+    address: "69/J Panthapath, Dhaka 1216",
+  },
+  services: {
+    breadcrumbHome: "Home",
+    breadcrumbServices: "Services",
+    indexTitle: ["Every channel, ", "one plan."] as Heading,
+    indexLede:
+      "From search and social to content and web, each service is run against the one number that matters to your business. Pick a channel to see how we work.",
+    empty: "Our services are being updated. Please check back shortly.",
+    learnMore: "Learn more",
+    defaultCta: "Book a free consultation",
+    from: ["From ", ""] as Heading,
+    whatYouGet: "What you get",
+    howWeWork: ["How we ", "work."] as Heading,
+    faq: ["Questions, ", "answered."] as Heading,
+    related: "Pairs well with",
+    allServices: "All services →",
+    ctaHeading: ["Ready to grow with ", "?"] as Heading,
+    ctaNote: "Free 30-minute strategy call. No obligation.",
+  },
+  notFound: {
+    code: "Error 404",
+    title: "This page wandered off.",
+    body: "The link may be old, or the page may have moved. Try one of these instead.",
+    home: "Home",
+    services: "Services",
+  },
 };
