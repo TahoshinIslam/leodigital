@@ -1,0 +1,470 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #040a0a;
+  --color-ink-raised: #091312;
+  --color-ink-card: #0a1512;
+  --color-ink-card-hover: #0c1b16;
+  --color-ink-footer: #05100c;
+  --color-accent: #49dc7a;
+
+  --font-sans: var(--font-instrument-sans), sans-serif;
+  --font-body: var(--font-manrope), sans-serif;
+  --font-serif: var(--font-newsreader), serif;
+  --font-mono: var(--font-plex-mono), monospace;
+
+  --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-scroll-cue: scroll-cue 2.4s ease-in-out infinite;
+  --animate-glow-drift: glow-drift 9s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.8s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -180% 0;
+  }
+  100% {
+    background-position: 180% 0;
+  }
+}
+
+/* Placeholder shown while a WebGL backdrop initialises. A faint brand-tinted
+   base with a moving sheen swept across it. */
+.backdrop-skeleton {
+  background-color: rgba(9, 19, 18, 0.6);
+  background-image: linear-gradient(
+    100deg,
+    rgba(73, 220, 122, 0) 20%,
+    rgba(73, 220, 122, 0.1) 42%,
+    rgba(34, 242, 239, 0.12) 52%,
+    rgba(73, 220, 122, 0) 74%
+  );
+  background-size: 180% 100%;
+  background-repeat: no-repeat;
+  animation: var(--animate-shimmer);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop-skeleton {
+    animation: none;
+  }
+}
+
+@keyframes scroll-cue {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 0.5;
+  }
+}
+
+@keyframes glow-drift {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate3d(0, -24px, 0) scale(1.06);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Lenis (inlined from lenis/dist/lenis.css — global CSS cannot be imported
+   from a client component). Lenis takes over scroll-behavior when active. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+body {
+  background: var(--color-ink);
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Full-screen menu open: freeze the page underneath. */
+html.menu-open,
+html.menu-open body {
+  overflow: hidden;
+}
+
+@keyframes menu-fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Site Motion toggle (menu footer): same effect as OS reduced motion, plus the
+   decorative WebGL canvases are hidden. */
+html[data-motion="off"] {
+  scroll-behavior: auto;
+}
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+html[data-motion="off"] main canvas {
+  visibility: hidden;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* SplitText mask wrappers need to clip the rising line. */
+.split-line {
+  will-change: transform, filter;
+}
+
+/* Cursor-follow card lighting. --mx/--my are written by SpotlightCard. */
+/* Card content stacks above the wash without needing a wrapper element. */
+.spotlight > * {
+  position: relative;
+  z-index: 1;
+}
+
+.spotlight-wash {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 500ms var(--ease-luxe);
+  background: radial-gradient(
+    260px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(77, 221, 127, 0.14),
+    rgba(34, 242, 239, 0.05) 40%,
+    transparent 70%
+  );
+}
+
+.spotlight:hover .spotlight-wash {
+  opacity: 1;
+}
+
+/* Liquid fill: a solid #4ddd7f disc clipped to a zero-radius circle at the
+   cursor, expanded to flood the whole card on hover. Sits below the card
+   content (which flips to dark ink via group-hover), above the base. */
+.spotlight-fill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: #4ddd7f;
+  clip-path: circle(0% at var(--mx, 50%) var(--my, 50%));
+  transition: clip-path 620ms var(--ease-luxe);
+}
+
+.spotlight:hover .spotlight-fill {
+  clip-path: circle(140% at var(--mx, 50%) var(--my, 50%));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotlight-fill {
+    transition: none;
+  }
+}
+
+/* Border glow: a second radial, masked to the 1px frame. */
+.spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 500ms var(--ease-luxe);
+  background: radial-gradient(
+    200px circle at var(--mx, 50%) var(--my, 50%),
+    #4ddd7f,
+    transparent 65%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.spotlight:hover::after {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotlight-wash,
+  .spotlight::after {
+    display: none;
+  }
+}
+
+.grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22140%22 height=%22140%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%222%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+}
+
+/* Admin-authored Markdown on service pages. */
+.prose-leo {
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.72);
+  max-width: 68ch;
+}
+.prose-leo > * + * {
+  margin-top: 1.1em;
+}
+.prose-leo h2,
+.prose-leo h3,
+.prose-leo h4 {
+  font-family: var(--font-sans);
+  color: #fff;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  margin-top: 1.8em;
+}
+.prose-leo > :first-child {
+  margin-top: 0;
+}
+.prose-leo h2 {
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 600;
+}
+.prose-leo h3 {
+  font-size: 21px;
+  font-weight: 600;
+}
+.prose-leo a {
+  color: var(--color-accent);
+  text-underline-offset: 3px;
+}
+.prose-leo strong {
+  color: #fff;
+}
+.prose-leo ul,
+.prose-leo ol {
+  padding-left: 1.3em;
+}
+.prose-leo ul {
+  list-style: disc;
+}
+.prose-leo ol {
+  list-style: decimal;
+}
+.prose-leo li + li {
+  margin-top: 0.4em;
+}
+.prose-leo li::marker {
+  color: var(--color-accent);
+}
+.prose-leo blockquote {
+  border-left: 2px solid var(--color-accent);
+  padding-left: 1.1em;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.15em;
+}
+.prose-leo img {
+  border-radius: 16px;
+  max-width: 100%;
+  height: auto;
+}
+.prose-leo code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 0.1em 0.4em;
+  border-radius: 6px;
+}
+.prose-leo hr {
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.prose-leo table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.prose-leo th,
+.prose-leo td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.6em 0.4em;
+  text-align: left;
+}
+
+/* ───────────────────────────── Admin panel ─────────────────────────────
+   Design tokens follow the Scoobee dashboard: light by default, dark via the
+   theme toggle (stored in a cookie so the server renders the right theme). */
+@theme inline {
+  --color-a-bg: var(--a-bg);
+  --color-a-bg2: var(--a-bg2);
+  --color-a-card: var(--a-card);
+  --color-a-card2: var(--a-card2);
+  --color-a-bd: var(--a-bd);
+  --color-a-bd2: var(--a-bd2);
+  --color-a-t1: var(--a-t1);
+  --color-a-t2: var(--a-t2);
+  --color-a-t3: var(--a-t3);
+  --color-a-brand: var(--a-brand);
+  --color-a-brand2: var(--a-brand2);
+  --color-a-violet: var(--a-violet);
+  --color-a-cyan: var(--a-cyan);
+  --color-a-em: var(--a-em);
+  --color-a-amber: var(--a-amber);
+  --color-a-rose: var(--a-rose);
+  --color-a-ring: var(--a-ring);
+  --font-admin: var(--font-jakarta), system-ui, -apple-system, sans-serif;
+  --font-admin-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --shadow-a: var(--a-sh);
+}
+
+.admin-root {
+  --a-bg: #f4f6fb;
+  --a-bg2: #ffffff;
+  --a-card: #ffffff;
+  --a-card2: #f5f7fc;
+  --a-bd: rgba(14, 19, 32, 0.09);
+  --a-bd2: rgba(14, 19, 32, 0.16);
+  --a-t1: #0b1020;
+  --a-t2: #5a6478;
+  --a-t3: #8b93a6;
+  --a-brand: #3b6ef5;
+  --a-brand2: #1e4fd1;
+  --a-violet: #7a55ef;
+  --a-cyan: #0fb5c4;
+  --a-em: #12a171;
+  --a-amber: #c98207;
+  --a-rose: #e14867;
+  --a-ring: rgba(59, 110, 245, 0.16);
+  --a-sh: 0 1px 2px rgba(16, 24, 40, 0.05), 0 12px 28px -14px rgba(16, 24, 40, 0.18);
+  color-scheme: light;
+  background: var(--a-bg);
+  color: var(--a-t1);
+  font-family: var(--font-admin);
+}
+
+.admin-root[data-theme="dark"] {
+  --a-bg: #06080e;
+  --a-bg2: #0a0d16;
+  --a-card: #0e1220;
+  --a-card2: #131828;
+  --a-bd: rgba(255, 255, 255, 0.07);
+  --a-bd2: rgba(255, 255, 255, 0.13);
+  --a-t1: #edf0f8;
+  --a-t2: #9aa4ba;
+  --a-t3: #6a748c;
+  --a-brand: #5b8cff;
+  --a-brand2: #8fb0ff;
+  --a-violet: #9a7bff;
+  --a-cyan: #45e0e8;
+  --a-em: #3ed598;
+  --a-amber: #ffc24b;
+  --a-rose: #ff6b8a;
+  --a-ring: rgba(91, 140, 255, 0.18);
+  --a-sh: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -12px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+
+.admin-root ::selection {
+  background: var(--a-ring);
+  color: inherit;
+}
+.admin-root :focus-visible {
+  outline: 2px solid var(--a-brand);
+  outline-offset: 2px;
+}
+.admin-root .a-input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--a-bd2);
+  background: var(--a-bg2);
+  color: var(--a-t1);
+  padding: 10px 13px;
+  font-size: 14px;
+  line-height: 1.45;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.admin-root .a-input::placeholder {
+  color: var(--a-t3);
+}
+.admin-root .a-input:focus {
+  outline: none;
+  border-color: var(--a-brand);
+  box-shadow: 0 0 0 4px var(--a-ring);
+}
+.admin-root .a-input[aria-invalid="true"] {
+  border-color: var(--a-rose);
+}
+.admin-root * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--a-bd2) transparent;
+}
+
+@keyframes a-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes a-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
