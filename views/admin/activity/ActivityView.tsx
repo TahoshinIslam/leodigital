@@ -2,6 +2,7 @@ import AccessDenied from "@/components/admin/AccessDenied";
 import { Card, EmptyState, PageHeader, Pill, type Tone } from "@/components/admin/ui";
 import { can } from "@/lib/auth/permissions";
 import { getAdminT } from "@/lib/i18n/admin";
+import { auditAction, auditSummary } from "@/lib/i18n/admin/audit";
 import type { SessionUser } from "@/server/auth/session";
 import * as audit from "@/server/repositories/audit.repository";
 
@@ -38,8 +39,8 @@ export default async function ActivityView({ user }: { user: SessionUser }) {
                       {new Date(e.createdAt).toLocaleString(tr.locale, { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Dhaka" })}
                     </td>
                     <td className="px-3 py-3 text-[13px] text-a-t1">{e.userName ?? "—"}</td>
-                    <td className="px-3 py-3"><Pill tone={tone(e.action)}>{e.action}</Pill></td>
-                    <td className="px-5 py-3 text-[13px] text-a-t2">{e.summary}</td>
+                    <td className="px-3 py-3"><Pill tone={tone(e.action)}>{auditAction(e.action, tr)}</Pill></td>
+                    <td className="px-5 py-3 text-[13px] text-a-t2">{auditSummary(e.summary, tr)}</td>
                   </tr>
                 ))}
               </tbody>

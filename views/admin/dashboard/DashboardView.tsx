@@ -20,6 +20,7 @@ import MiniCalendar from "@/components/admin/MiniCalendar";
 import { ButtonLink, Card, CardHeader, EmptyState, IconTile, StatusPill, relativeTime, type Tone } from "@/components/admin/ui";
 import { can } from "@/lib/auth/permissions";
 import { getAdminT } from "@/lib/i18n/admin";
+import { auditSummary } from "@/lib/i18n/admin/audit";
 import type { SessionUser } from "@/server/auth/session";
 import { getDashboard } from "@/server/modules/dashboard";
 import { summary as vitalsSummary } from "@/server/modules/vitals";
@@ -316,7 +317,7 @@ export default async function DashboardView({ user }: { user: SessionUser }) {
                   <li key={a.id} className="flex items-start gap-3 py-2.5">
                     <IconTile tone={meta.tone}>{meta.icon}</IconTile>
                     <div className="min-w-0 flex-1">
-                      <p className="m-0 truncate text-[13px] font-semibold text-a-t1">{a.summary}</p>
+                      <p className="m-0 truncate text-[13px] font-semibold text-a-t1">{auditSummary(a.summary, tr)}</p>
                       <p className="m-0 text-[11.5px] text-a-t3">{a.userName ?? tr.common.system}</p>
                     </div>
                     <span className="shrink-0 text-[11.5px] text-a-t3">{relativeTime(a.createdAt, now, lang)}</span>
